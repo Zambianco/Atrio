@@ -19,12 +19,16 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # APIs
     path('api/pessoas/', include('apps.pessoas.urls')),
+    path('api/pessoas/buscar/', include('apps.pessoas.urls_ui')),
     path('api/veiculos/', include('apps.veiculos.urls')),
     path('api/visitas/', include('apps.visitas.urls')),
+    
+    # UI/Views
     path('', include('painel.urls')),
     path("", include("apps.ui.urls")),
-    path("api/", include("apps.visitas.urls")),
     path("painel/", include("apps.painel.urls")),
     path("visitas/", include("apps.visitas.urls_ui")),
     path("pessoas/", include("apps.pessoas.urls_ui")),

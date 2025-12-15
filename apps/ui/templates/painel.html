@@ -1,56 +1,123 @@
 {% extends "ui/base.html" %}
 {% load static %}
 
-{% block title %}Painel{% endblock %}
+{% block title %}Painel de Portaria{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">Painel de Portaria</h2>
+<div class="container-fluid">
 
-<div class="row">
-  <div class="col-md-6">
-    <div class="card bg-primary text-white mb-3">
-      <div class="card-body text-center">
-        <h4 id="totalPessoas">0</h4>
-        <p>Pessoas Presentes</p>
+  <!-- Cabeçalho -->
+  <div class="row mb-4">
+    <div class="col-12 text-center">
+      <h1 class="fw-bold text-primary">
+        <i class="bi bi-display me-2"></i>Painel de Portaria
+      </h1>
+      <p class="text-muted">Monitoramento em tempo real</p>
+    </div>
+  </div>
+
+  <!-- Estatísticas -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="card bg-primary text-white">
+        <div class="card-body text-center">
+          <h4 id="totalPessoas">0</h4>
+          <p>Pessoas Presentes</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card bg-warning text-dark">
+        <div class="card-body text-center">
+          <h4 id="totalVeiculos">0</h4>
+          <p>Veículos Presentes</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="col-md-6">
-    <div class="card bg-warning text-dark mb-3">
-      <div class="card-body text-center">
-        <h4 id="totalVeiculos">0</h4>
-        <p>Veículos Presentes</p>
+  <!-- Pessoas -->
+  <div class="card mb-4">
+    <div class="card-header bg-success text-white d-flex justify-content-between">
+      <h5 class="mb-0">
+        <i class="bi bi-people-fill me-2"></i>Pessoas
+        <span class="badge bg-light text-dark ms-2" id="badgePessoas">0</span>
+      </h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0" id="tblPessoas">
+        <thead class="table-light">
+          <tr>
+            <th>Nome</th>
+            <th>Empresa</th>
+            <th>Entrada</th>
+            <th>Tempo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Veículos -->
+  <div class="card mb-4">
+    <div class="card-header bg-info text-white d-flex justify-content-between">
+      <h5 class="mb-0">
+        <i class="bi bi-car-front-fill me-2"></i>Veículos
+        <span class="badge bg-light text-dark ms-2" id="badgeVeiculos">0</span>
+      </h5>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0" id="tblVeiculos">
+        <thead class="table-light">
+          <tr>
+            <th>Placa</th>
+            <th>Empresa</th>
+            <th>Entrada</th>
+            <th>Tempo</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal Detalhes da Visita -->
+  <div class="modal fade" id="modalGrupo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Detalhes da Visita</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-2">
+            <strong>Destino:</strong>
+            <span id="mdDestino"></span>
+          </div>
+          <div class="mb-2">
+            <strong>Responsável:</strong>
+            <span id="mdResponsavel"></span>
+          </div>
+          <div class="mb-3">
+            <strong>Entrada:</strong>
+            <span id="mdEntrada"></span>
+          </div>
+
+          <hr>
+
+          <h6>Pessoas</h6>
+          <ul id="mdPessoas" class="mb-3"></ul>
+
+          <h6>Veículos</h6>
+          <ul id="mdVeiculos"></ul>
+        </div>
       </div>
     </div>
   </div>
+
 </div>
-
-<h4>Pessoas</h4>
-<table class="table table-striped" id="tblPessoas">
-  <thead>
-    <tr>
-      <th>Nome</th>
-      <th>Empresa</th>
-      <th>Entrada</th>
-      <th>Tempo</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<h4>Veículos</h4>
-<table class="table table-striped" id="tblVeiculos">
-  <thead>
-    <tr>
-      <th>Placa</th>
-      <th>Empresa</th>
-      <th>Entrada</th>
-      <th>Tempo</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
 {% endblock %}
 
 {% block extra_js %}

@@ -1,0 +1,24 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Nova Pessoa{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Cadastrar Pessoa</h2>
+
+<div class="mb-3">
+  <label class="form-label">Nome</label>
+  <input id="nomePessoa" class="form-control">
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Empresa</label>
+  <input id="empresaPessoa" class="form-control">
+</div>
+
+<button id="btnSalvarPessoa" class="btn btn-success">Salvar</button>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/nova_pessoa.js' %}"></script>
+{% endblock %}
