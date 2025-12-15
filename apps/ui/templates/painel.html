@@ -1,0 +1,58 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Painel{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Painel de Portaria</h2>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card bg-primary text-white mb-3">
+      <div class="card-body text-center">
+        <h4 id="totalPessoas">0</h4>
+        <p>Pessoas Presentes</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card bg-warning text-dark mb-3">
+      <div class="card-body text-center">
+        <h4 id="totalVeiculos">0</h4>
+        <p>Veículos Presentes</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h4>Pessoas</h4>
+<table class="table table-striped" id="tblPessoas">
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Empresa</th>
+      <th>Entrada</th>
+      <th>Tempo</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<h4>Veículos</h4>
+<table class="table table-striped" id="tblVeiculos">
+  <thead>
+    <tr>
+      <th>Placa</th>
+      <th>Empresa</th>
+      <th>Entrada</th>
+      <th>Tempo</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/painel.js' %}"></script>
+{% endblock %}

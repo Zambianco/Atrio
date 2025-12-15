@@ -1,0 +1,24 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Novo Veículo{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Cadastrar Veículo</h2>
+
+<div class="mb-3">
+  <label class="form-label">Placa</label>
+  <input id="placaVeiculo" class="form-control">
+</div>
+
+<div class="mb-3">
+  <label class="form-label">Empresa</label>
+  <input id="empresaVeiculo" class="form-control">
+</div>
+
+<button id="btnSalvarVeiculo" class="btn btn-warning">Salvar</button>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/novo_veiculo.js' %}"></script>
+{% endblock %}
