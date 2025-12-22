@@ -20,14 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
     modalBuscaVeiculo = new bootstrap.Modal(modalVeiculoEl);
   }
 
-  const inputBuscaPessoa = document.getElementById('inputBuscaPessoa');
-  const inputBuscaVeiculo = document.getElementById('inputBuscaVeiculo');
+  // novos IDs compatíveis com o modal reutilizável
+  const inputBuscaPessoa = document.getElementById('buscaPessoaInput');
+  const inputBuscaVeiculo = document.getElementById('buscaVeiculoInput');
 
   if (inputBuscaPessoa) {
     inputBuscaPessoa.addEventListener('input', async e => {
       const q = e.target.value.trim();
       if (q.length < 2) {
-        document.getElementById('listaPessoas').innerHTML = '';
+        const l = document.getElementById('listaSugestoesPessoa'); if (l) l.innerHTML = '';
         return;
       }
       buscarESugerirPessoas(q);
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     inputBuscaVeiculo.addEventListener('input', async e => {
       const q = e.target.value.trim();
       if (q.length < 2) {
-        document.getElementById('listaVeiculos').innerHTML = '';
+        const l = document.getElementById('listaSugestoesVeiculo'); if (l) l.innerHTML = '';
         return;
       }
       buscarESugerirVeiculos(q);

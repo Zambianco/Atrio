@@ -23,6 +23,8 @@
 
 <!-- IMPORTANTE: Carregar nova_visita.js primeiro -->
 <script src="{% static 'js/nova_visita.js' %}"></script>
+<script src="{% static 'js/modal_seleciona_pessoa.js' %}"></script>
+<script src="{% static 'js/modal_seleciona_veiculo.js' %}"></script>
 <script src="{% static 'js/gerenciar_visita.js' %}"></script>
 
 
@@ -214,36 +216,8 @@
 
 </div>
 
-<!-- Modal de busca de pessoa -->
-<div class="modal fade" id="modalBuscaPessoa" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Buscar Pessoa</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="inputBuscaPessoa" class="form-control" placeholder="Digite o nome da pessoa...">
-        <ul id="listaPessoas" class="list-group mt-3"></ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal de busca de veículo -->
-<div class="modal fade" id="modalBuscaVeiculo" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Buscar Veículo</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <input type="text" id="inputBuscaVeiculo" class="form-control" placeholder="Digite a placa...">
-        <ul id="listaVeiculos" class="list-group mt-3"></ul>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Modais reutilizáveis para busca (pessoa / veículo) -->
+{% include 'ui/modal_seleciona_pessoa.html' %}
+{% include 'ui/modal_seleciona_veiculo.html' %}
 
 {% endblock %}

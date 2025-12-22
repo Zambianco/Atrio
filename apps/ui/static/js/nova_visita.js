@@ -5,6 +5,10 @@ let veiculosAdicionados = [];
 let modoGerenciamento = false;
 let visitaExistenteId = null;
 
+// Modal instances (iniciadas em modal_seleciona_pessoa.js e modal_seleciona_veiculo.js)
+// let modalBuscaPessoa = null;
+// let modalBuscaVeiculo = null;
+
 // ========== FUNÇÕES GLOBAIS ==========
 
 // CSRF
@@ -32,121 +36,51 @@ function isModoGerenciamento() {
 
 // Funções auxiliares
 function mostrarOverlay() {
-  const overlay = document.getElementById("overlay");
-  if (overlay) overlay.style.display = "block";
+  // Deprecated - modal Bootstrap não precisa de overlay
 }
 
 function esconderOverlay() {
-  const overlay = document.getElementById("overlay");
-  if (overlay) overlay.style.display = "none";
+  // Deprecated - modal Bootstrap não precisa de overlay
 }
 
 function mostrarBuscaPessoa() {
   console.log("Mostrar busca pessoa - Modo Gerenciamento:", isModoGerenciamento());
   
-  // Se estiver em modo gerenciamento, usar o modal do Bootstrap
-  if (isModoGerenciamento()) {
-    const modal = document.getElementById('modalBuscaPessoa');
-    if (modal) {
-      const bsModal = new bootstrap.Modal(modal);
-      bsModal.show();
-    } else {
-      console.error('Modal de busca de pessoa não encontrado na página de gerenciamento');
-    }
-    return;
+  // Usar modal Bootstrap unificado
+  if (typeof modalBuscaPessoa !== 'undefined' && modalBuscaPessoa) {
+    document.getElementById('buscaPessoaInput').value = '';
+    document.getElementById('listaSugestoesPessoa').innerHTML = '';
+    modalBuscaPessoa.show();
+  } else {
+    console.error('Modal Bootstrap de busca de pessoa não inicializado');
   }
-  
-  // Modo nova visita (código original)
-  const buscaPessoaContainer = document.getElementById("buscaPessoaContainer");
-  const buscaPessoaInput = document.getElementById("buscaPessoaInput");
-  
-  if (!buscaPessoaContainer || !buscaPessoaInput) {
-    console.error("Elementos de busca de pessoa não encontrados");
-    return;
-  }
-  
-  document.body.appendChild(buscaPessoaContainer);
-  buscaPessoaContainer.classList.remove("d-none");
-  mostrarOverlay();
-  
-  setTimeout(() => {
-    buscaPessoaInput.focus();
-  }, 100);
 }
 
 function esconderBuscaPessoa() {
-  // Se estiver em modo gerenciamento, não faz nada (o modal do Bootstrap se fecha sozinho)
-  if (isModoGerenciamento()) return;
-  
-  const buscaPessoaContainer = document.getElementById("buscaPessoaContainer");
-  const buscaPessoaInput = document.getElementById("buscaPessoaInput");
-  const listaSugestoesPessoa = document.getElementById("listaSugestoesPessoa");
-  const cardBodyPessoas = document.querySelector('#cardPessoas .card-body');
-  
-  if (!buscaPessoaContainer) return;
-  
-  if (cardBodyPessoas) {
-    cardBodyPessoas.appendChild(buscaPessoaContainer);
+  // Fechar modal Bootstrap
+  if (typeof modalBuscaPessoa !== 'undefined' && modalBuscaPessoa) {
+    modalBuscaPessoa.hide();
   }
-  
-  buscaPessoaContainer.classList.add("d-none");
-  esconderOverlay();
-  if (buscaPessoaInput) buscaPessoaInput.value = "";
-  if (listaSugestoesPessoa) listaSugestoesPessoa.innerHTML = "";
 }
 
 function mostrarBuscaVeiculo() {
   console.log("Mostrar busca veículo - Modo Gerenciamento:", isModoGerenciamento());
   
-  // Se estiver em modo gerenciamento, usar o modal do Bootstrap
-  if (isModoGerenciamento()) {
-    const modal = document.getElementById('modalBuscaVeiculo');
-    if (modal) {
-      const bsModal = new bootstrap.Modal(modal);
-      bsModal.show();
-    } else {
-      console.error('Modal de busca de veículo não encontrado na página de gerenciamento');
-    }
-    return;
+  // Usar modal Bootstrap unificado
+  if (typeof modalBuscaVeiculo !== 'undefined' && modalBuscaVeiculo) {
+    document.getElementById('buscaVeiculoInput').value = '';
+    document.getElementById('listaSugestoesVeiculo').innerHTML = '';
+    modalBuscaVeiculo.show();
+  } else {
+    console.error('Modal Bootstrap de busca de veículo não inicializado');
   }
-  
-  // Modo nova visita (código original)
-  const buscaVeiculoContainer = document.getElementById("buscaVeiculoContainer");
-  const buscaVeiculoInput = document.getElementById("buscaVeiculoInput");
-  
-  if (!buscaVeiculoContainer || !buscaVeiculoInput) {
-    console.error("Elementos de busca de veículo não encontrados");
-    return;
-  }
-  
-  document.body.appendChild(buscaVeiculoContainer);
-  buscaVeiculoContainer.classList.remove("d-none");
-  mostrarOverlay();
-  
-  setTimeout(() => {
-    buscaVeiculoInput.focus();
-  }, 100);
 }
 
 function esconderBuscaVeiculo() {
-  // Se estiver em modo gerenciamento, não faz nada
-  if (isModoGerenciamento()) return;
-  
-  const buscaVeiculoContainer = document.getElementById("buscaVeiculoContainer");
-  const buscaVeiculoInput = document.getElementById("buscaVeiculoInput");
-  const listaSugestoesVeiculo = document.getElementById("listaSugestoesVeiculo");
-  const cardBodyVeiculos = document.querySelector('#cardVeiculos .card-body');
-  
-  if (!buscaVeiculoContainer) return;
-  
-  if (cardBodyVeiculos) {
-    cardBodyVeiculos.appendChild(buscaVeiculoContainer);
+  // Fechar modal Bootstrap
+  if (typeof modalBuscaVeiculo !== 'undefined' && modalBuscaVeiculo) {
+    modalBuscaVeiculo.hide();
   }
-  
-  buscaVeiculoContainer.classList.add("d-none");
-  esconderOverlay();
-  if (buscaVeiculoInput) buscaVeiculoInput.value = "";
-  if (listaSugestoesVeiculo) listaSugestoesVeiculo.innerHTML = "";
 }
 
 // Buscar pessoas na API
