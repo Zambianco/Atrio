@@ -1,0 +1,249 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Gerenciar Visita #{{ visita.id }}{% endblock %}
+
+{% block content %}
+
+<!-- FLAGS GLOBAIS (ANTES DO JS) -->
+{{ visita.id|json_script:"visita-id" }}
+
+<script>
+  window.modoGerenciamento = true;
+  // obter o id a partir do elemento gerado por json_script para evitar chaves de template brutas no JS
+  window.visitaExistenteId = (function() {
+    const el = document.getElementById('visita-id');
+    try {
+      return el ? JSON.parse(el.textContent) : 0;
+    } catch (e) {
+      return 0;
+    }
+  })();
+</script>
+
+<!-- IMPORTANTE: Carregar nova_visita.js primeiro -->
+<script src="{% static 'js/nova_visita.js' %}"></script>
+<script src="{% static 'js/gerenciar_visita.js' %}"></script>
+
+
+<style>
+  .linha-visita{
+    display: grid;
+    grid-template-columns: 1fr 90px 160px;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .col-nome{
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .status-badge{
+    display: inline-block;
+    width: 90px;
+    text-align: center;
+  }
+
+  .col-acao{
+    text-align: right;
+  }
+</style>
+ 
+
+
+
+
+<div class="container-fluid py-4">
+
+  <!-- Cabeçalho -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold text-primary mb-1">
+        <i class="bi bi-gear me-2"></i>Gerenciar Visita
+      </h2>
+      <p class="text-muted mb-0">
+        Visita #{{ visita.id }} • {{ visita.motivo }}
+      </p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a href="{% url 'ui:visitas' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+      </a>
+
+      {% if visita.status == 'aberta' %}
+      <button class="btn btn-danger">
+        <i class="bi bi-x-circle me-1"></i>Encerrar visita
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Resumo -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <small class="text-muted">Responsável</small>
+          <div class="fw-semibold">{{ visita.autorizado_por }}</div>
+        </div>
+
+        <div class="col-md-3">
+          <small class="text-muted">Início</small>
+          <div>{{ visita.data_entrada|date:"d/m/Y H:i" }}</div>
+        </div>
+
+        <div class="col-md-3">
+          <small class="text-muted">Status</small><br>
+          <span class="badge bg-success">ABERTA</span>
+        </div>
+
+        <div class="col-md-3">
+          <small class="text-muted">Observação</small>
+          <div>{{ visita.observacao|default:"—" }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pessoas -->
+  <div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-people me-2"></i>Pessoas
+      </h5>
+      <button
+        class="btn btn-sm btn-outline-primary"
+        onclick="mostrarBuscaPessoa()">
+        <i class="bi bi-plus"></i>Adicionar pessoa
+      </button>
+    </div>
+
+    <ul class="list-group list-group-flush">
+      {% for p in pessoas %}
+        <li class="list-group-item">
+          <div class="linha-visita">
+
+            <div class="col-nome">
+              <strong>{{ p.pessoa.nome }}</strong>
+            </div>
+
+            <div>
+              {% if p.data_saida %}
+                <span class="badge bg-secondary status-badge">SAIU</span>
+              {% else %}
+                <span class="badge bg-success status-badge">DENTRO</span>
+              {% endif %}
+            </div>
+
+            <div class="col-acao">
+              {% if p.data_saida %}
+                <button class="btn btn-sm btn-outline-success"
+                        onclick="registrarEntradaPessoa({{ p.id }})">
+                  Retornar
+                </button>
+              {% else %}
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="registrarSaidaPessoa({{ p.id }})">
+                  Registrar saída
+                </button>
+              {% endif %}
+            </div>
+
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+  </div>
+
+  <!-- Veículos -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0">
+        <i class="bi bi-truck me-2"></i>Veículos
+      </h5>
+      <button
+        class="btn btn-sm btn-outline-primary"
+        onclick="mostrarBuscaVeiculo()">
+        <i class="bi bi-plus"></i>Adicionar veículo
+      </button>
+    </div>
+
+    <ul class="list-group list-group-flush">
+      {% for v in veiculos %}
+        <li class="list-group-item">
+          <div class="linha-visita">
+
+            <div class="col-nome">
+              <strong>{{ v.veiculo.placa }}</strong>
+              <small class="text-muted ms-2">{{ v.veiculo.modelo }}</small>
+            </div>
+
+            <div>
+              {% if v.data_saida %}
+                <span class="badge bg-secondary status-badge">SAIU</span>
+              {% else %}
+                <span class="badge bg-success status-badge">DENTRO</span>
+              {% endif %}
+            </div>
+
+            <div class="col-acao">
+              {% if v.data_saida %}
+                <button class="btn btn-sm btn-outline-success"
+                        onclick="registrarEntradaVeiculo({{ v.id }})">
+                  Retornar
+                </button>
+              {% else %}
+                <button class="btn btn-sm btn-outline-danger"
+                        onclick="registrarSaidaVeiculo({{ v.id }})">
+                  Registrar saída
+                </button>
+              {% endif %}
+            </div>
+
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+  </div>
+
+</div>
+
+<!-- Modal de busca de pessoa -->
+<div class="modal fade" id="modalBuscaPessoa" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Buscar Pessoa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="inputBuscaPessoa" class="form-control" placeholder="Digite o nome da pessoa...">
+        <ul id="listaPessoas" class="list-group mt-3"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de busca de veículo -->
+<div class="modal fade" id="modalBuscaVeiculo" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Buscar Veículo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" id="inputBuscaVeiculo" class="form-control" placeholder="Digite a placa...">
+        <ul id="listaVeiculos" class="list-group mt-3"></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

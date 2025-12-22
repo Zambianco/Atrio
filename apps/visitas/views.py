@@ -1,3 +1,4 @@
+# /apps/visitas/views.py
 from datetime import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -40,13 +41,20 @@ class VisitaPessoaViewSet(viewsets.ModelViewSet):
     queryset = VisitaPessoa.objects.all()
     serializer_class = VisitaPessoaSerializer
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post", "patch"])
     def saida(self, request, pk=None):
         try:
             sair_pessoa(pk)
         except ValidationError as e:
             return Response({"erro": e.message}, status=400)
 
+        return Response({"ok": True})
+    
+    @action(detail=True, methods=["post", "patch"])
+    def entrada(self, request, pk=None):
+        visita = self.get_object()
+        visita.data_saida = None
+        visita.save(update_fields=["data_saida"])
         return Response({"ok": True})
 
 
@@ -55,7 +63,7 @@ class VisitaVeiculoViewSet(viewsets.ModelViewSet):
     queryset = VisitaVeiculo.objects.all()
     serializer_class = VisitaVeiculoSerializer
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post", "patch"])
     def saida(self, request, pk=None):
         try:
             sair_veiculo(pk)
@@ -105,10 +113,10 @@ class AdicionarNaVisitaAPIView(APIView):
 
 
 class GrupoResumoAPIView(APIView):
-    permission_classes = [IsAuthenticated, IsUsuario | IsAdmin]
+    permission_classes = [IsAuthenticated, IsUsuario | IsAdmin | IsPorteiro]
+
     def get(self, request, grupo_id):
         grupo = get_object_or_404(GrupoVisita, id=grupo_id)
-
         agora = timezone.now()
 
         def tempo(inicio, fim=None):
@@ -117,6 +125,9 @@ class GrupoResumoAPIView(APIView):
             h = delta.seconds // 3600
             m = (delta.seconds % 3600) // 60
             return f"{h}h {m}m"
+
+        pessoas = VisitaPessoa.objects.filter(grupo=grupo)
+        veiculos = VisitaVeiculo.objects.filter(grupo=grupo)
 
         return Response({
             "grupo": {
@@ -129,28 +140,30 @@ class GrupoResumoAPIView(APIView):
             },
             "pessoas": [
                 {
-                    "id": v.id,
+                    "id": v.id,                 # id da VisitaPessoa
+                    "pessoa_id": v.pessoa.id,   # <-- ESSENCIAL p/ reentrada
                     "nome": v.pessoa.nome,
                     "empresa": v.pessoa.empresa,
                     "entrada": v.data_entrada,
                     "saida": v.data_saida,
-                    "dentro": v.data_saida is None,
                     "tempo": tempo(v.data_entrada, v.data_saida),
                 }
-                for v in grupo.pessoas.all()
+                for v in pessoas
             ],
             "veiculos": [
                 {
-                    "id": v.id,
+                    "id": v.id,                   # id da VisitaVeiculo
+                    "veiculo_id": v.veiculo.id,   # <-- ESSENCIAL p/ reentrada
                     "placa": v.veiculo.placa,
                     "empresa": v.veiculo.empresa,
                     "entrada": v.data_entrada,
                     "saida": v.data_saida,
-                    "dentro": v.data_saida is None,
                     "tempo": tempo(v.data_entrada, v.data_saida),
                 }
-                for v in grupo.veiculos.all()
+                for v in veiculos
             ],
         })
+
+
     
 

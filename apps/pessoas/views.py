@@ -27,3 +27,7 @@ class PessoaViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(pessoas, many=True)
         return Response({'pessoas': serializer.data})
+    
+    
+    
+    

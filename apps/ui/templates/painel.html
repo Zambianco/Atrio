@@ -1,3 +1,4 @@
+<!-- painel.html -->
 {% extends "ui/base.html" %}
 {% load static %}
 
@@ -83,39 +84,92 @@
   </div>
 
   <!-- Modal Detalhes da Visita -->
-  <div class="modal fade" id="modalGrupo" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Detalhes da Visita</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+ <div class="modal fade" id="modalVisita" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
 
-        <div class="modal-body">
-          <div class="mb-2">
-            <strong>Destino:</strong>
-            <span id="mdDestino"></span>
-          </div>
-          <div class="mb-2">
-            <strong>Responsável:</strong>
-            <span id="mdResponsavel"></span>
-          </div>
-          <div class="mb-3">
-            <strong>Entrada:</strong>
-            <span id="mdEntrada"></span>
-          </div>
-
-          <hr>
-
-          <h6>Pessoas</h6>
-          <ul id="mdPessoas" class="mb-3"></ul>
-
-          <h6>Veículos</h6>
-          <ul id="mdVeiculos"></ul>
-        </div>
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-info-circle me-2"></i>Detalhes da Visita
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
+
+      <div class="modal-body">
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-info">
+              <i class="bi bi-info-circle me-1"></i>Informações da Visita
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-stats">
+              <i class="bi bi-graph-up me-1"></i>Estatísticas
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content">
+
+          <!-- INFO -->
+          <div class="tab-pane fade show active" id="tab-info">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <p><strong>ID:</strong> <span id="v-id"></span></p>
+                <p><strong>Motivo:</strong> <span id="v-motivo"></span></p>
+                <p><strong>Responsável:</strong> <span id="v-responsavel"></span></p>
+                <p>
+                  <strong>Status:</strong>
+                  <span id="v-status" class="badge"></span>
+                </p>
+                <p><strong>Início:</strong><br><span id="v-inicio"></span></p>
+                <p><strong>Término:</strong><br><span id="v-fim"></span></p>
+              </div>
+
+              <div class="col-md-6">
+                <p><strong>Total Pessoas:</strong> <span class="badge bg-secondary" id="v-total-pessoas"></span></p>
+                <p><strong>Pessoas Presentes:</strong> <span class="badge bg-success" id="v-presentes-pessoas"></span></p>
+                <p><strong>Total Veículos:</strong> <span class="badge bg-secondary" id="v-total-veiculos"></span></p>
+                <p><strong>Veículos Presentes:</strong> <span class="badge bg-success" id="v-presentes-veiculos"></span></p>
+              </div>
+            </div>
+
+            <hr>
+
+            <h6><i class="bi bi-people me-1"></i>Pessoas</h6>
+            <ul class="list-group mb-3" id="lista-pessoas"></ul>
+
+            <h6><i class="bi bi-truck me-1"></i>Veículos</h6>
+            <ul class="list-group" id="lista-veiculos"></ul>
+          </div>
+
+          <!-- STATS -->
+          <div class="tab-pane fade" id="tab-stats">
+            <p class="text-muted">Reservado para gráficos ou métricas futuras.</p>
+          </div>
+
+        </div>
+
+        <small class="text-muted d-block mt-3" id="v-encerramento"></small>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+        <button class="btn btn-primary no-print" onclick="imprimirComprovante()">
+          <i class="bi bi-printer me-1"></i>Imprimir
+        </button>
+        <button id="btnEncerrarVisita"
+        class="btn btn-danger d-none"
+        onclick="encerrarVisita(visitaAtualGrupo)">
+  <i class="bi bi-door-closed me-1"></i>Encerrar Visita
+</button>
+      </div>
+
     </div>
   </div>
+</div>
 
 </div>
 {% endblock %}

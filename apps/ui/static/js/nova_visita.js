@@ -1,260 +1,162 @@
-document.addEventListener("DOMContentLoaded", () => {
-  let grupoVisita = null;
-  let pessoasAdicionadas = [];
-  let veiculosAdicionados = [];
+// ========== VARIÁVEIS GLOBAIS ==========
+let grupoVisita = null;
+let pessoasAdicionadas = [];
+let veiculosAdicionados = [];
+let modoGerenciamento = false;
+let visitaExistenteId = null;
 
-  const btnCriar = document.getElementById("btnCriarCancelar");
-  const btnRegistrar = document.getElementById("btnRegistrar");
-  const motivoInput = document.getElementById("motivo");
-  const responsavelInput = document.getElementById("responsavel");
-  const btnAddPessoa = document.getElementById("btnAddPessoa");
-  const btnAddVeiculo = document.getElementById("btnAddVeiculo");
-  const overlay = document.getElementById("overlay");
-  const acoesDiv = document.getElementById("acoes");
-  const cardPessoas = document.getElementById("cardPessoas");
-  const cardVeiculos = document.getElementById("cardVeiculos");
+// ========== FUNÇÕES GLOBAIS ==========
 
-  // Elementos de busca de pessoas
-  const buscaPessoaContainer = document.getElementById("buscaPessoaContainer");
-  const buscaPessoaInput = document.getElementById("buscaPessoaInput");
-  const btnBuscarPessoa = document.getElementById("btnBuscarPessoa");
-  const btnNovaPessoa = document.getElementById("btnNovaPessoa");
-  const listaSugestoesPessoa = document.getElementById("listaSugestoesPessoa");
-  const tbPessoas = document.getElementById("tbPessoas");
-
-  // Elementos de busca de veículos
-  const buscaVeiculoContainer = document.getElementById("buscaVeiculoContainer");
-  const buscaVeiculoInput = document.getElementById("buscaVeiculoInput");
-  const btnBuscarVeiculo = document.getElementById("btnBuscarVeiculo");
-  const btnNovoVeiculo = document.getElementById("btnNovoVeiculo");
-  const listaSugestoesVeiculo = document.getElementById("listaSugestoesVeiculo");
-  const tbVeiculos = document.getElementById("tbVeiculos");
-
-  // CSRF
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== "") {
-      const cookies = document.cookie.split(";");
-      for (let cookie of cookies) {
-        cookie = cookie.trim();
-        if (cookie.startsWith(name + "=")) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
+// CSRF
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
       }
     }
-    return cookieValue;
   }
+  return cookieValue;
+}
 
-  const csrftoken = getCookie("csrftoken");
+const csrftoken = getCookie("csrftoken");
 
-  // Funções auxiliares
-  function mostrarOverlay() {
-    overlay.style.display = "block";
-  }
+// Função para verificar se estamos na página de gerenciamento
+function isModoGerenciamento() {
+  return window.modoGerenciamento === true;
+}
 
-  function esconderOverlay() {
-    overlay.style.display = "none";
-  }
+// Funções auxiliares
+function mostrarOverlay() {
+  const overlay = document.getElementById("overlay");
+  if (overlay) overlay.style.display = "block";
+}
 
-  function mostrarBuscaPessoa() {
-  console.log("Mostrar busca pessoa");
+function esconderOverlay() {
+  const overlay = document.getElementById("overlay");
+  if (overlay) overlay.style.display = "none";
+}
+
+function mostrarBuscaPessoa() {
+  console.log("Mostrar busca pessoa - Modo Gerenciamento:", isModoGerenciamento());
   
-  // PRIMEIRO: Garantir que o diálogo está posicionado corretamente
-  // Remover do container pai e mover para o body
+  // Se estiver em modo gerenciamento, usar o modal do Bootstrap
+  if (isModoGerenciamento()) {
+    const modal = document.getElementById('modalBuscaPessoa');
+    if (modal) {
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+    } else {
+      console.error('Modal de busca de pessoa não encontrado na página de gerenciamento');
+    }
+    return;
+  }
+  
+  // Modo nova visita (código original)
+  const buscaPessoaContainer = document.getElementById("buscaPessoaContainer");
+  const buscaPessoaInput = document.getElementById("buscaPessoaInput");
+  
+  if (!buscaPessoaContainer || !buscaPessoaInput) {
+    console.error("Elementos de busca de pessoa não encontrados");
+    return;
+  }
+  
   document.body.appendChild(buscaPessoaContainer);
-  
-  // MOSTRAR
   buscaPessoaContainer.classList.remove("d-none");
   mostrarOverlay();
   
-  // Focar no input
   setTimeout(() => {
     buscaPessoaInput.focus();
   }, 100);
 }
 
-  function esconderBuscaPessoa() {
-  // VOLTAR para o local original
+function esconderBuscaPessoa() {
+  // Se estiver em modo gerenciamento, não faz nada (o modal do Bootstrap se fecha sozinho)
+  if (isModoGerenciamento()) return;
+  
+  const buscaPessoaContainer = document.getElementById("buscaPessoaContainer");
+  const buscaPessoaInput = document.getElementById("buscaPessoaInput");
+  const listaSugestoesPessoa = document.getElementById("listaSugestoesPessoa");
   const cardBodyPessoas = document.querySelector('#cardPessoas .card-body');
+  
+  if (!buscaPessoaContainer) return;
+  
   if (cardBodyPessoas) {
     cardBodyPessoas.appendChild(buscaPessoaContainer);
   }
   
   buscaPessoaContainer.classList.add("d-none");
   esconderOverlay();
-  buscaPessoaInput.value = "";
-  listaSugestoesPessoa.innerHTML = "";
+  if (buscaPessoaInput) buscaPessoaInput.value = "";
+  if (listaSugestoesPessoa) listaSugestoesPessoa.innerHTML = "";
 }
 
 function mostrarBuscaVeiculo() {
-  console.log("Mostrar busca veículo");
+  console.log("Mostrar busca veículo - Modo Gerenciamento:", isModoGerenciamento());
   
-  // PRIMEIRO: Garantir que o diálogo está posicionado corretamente
-  // Remover do container pai e mover para o body
+  // Se estiver em modo gerenciamento, usar o modal do Bootstrap
+  if (isModoGerenciamento()) {
+    const modal = document.getElementById('modalBuscaVeiculo');
+    if (modal) {
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+    } else {
+      console.error('Modal de busca de veículo não encontrado na página de gerenciamento');
+    }
+    return;
+  }
+  
+  // Modo nova visita (código original)
+  const buscaVeiculoContainer = document.getElementById("buscaVeiculoContainer");
+  const buscaVeiculoInput = document.getElementById("buscaVeiculoInput");
+  
+  if (!buscaVeiculoContainer || !buscaVeiculoInput) {
+    console.error("Elementos de busca de veículo não encontrados");
+    return;
+  }
+  
   document.body.appendChild(buscaVeiculoContainer);
-  
-  // MOSTRAR
   buscaVeiculoContainer.classList.remove("d-none");
   mostrarOverlay();
   
-  // Focar no input
   setTimeout(() => {
     buscaVeiculoInput.focus();
   }, 100);
 }
 
-
-
 function esconderBuscaVeiculo() {
-  // VOLTAR para o local original
+  // Se estiver em modo gerenciamento, não faz nada
+  if (isModoGerenciamento()) return;
+  
+  const buscaVeiculoContainer = document.getElementById("buscaVeiculoContainer");
+  const buscaVeiculoInput = document.getElementById("buscaVeiculoInput");
+  const listaSugestoesVeiculo = document.getElementById("listaSugestoesVeiculo");
   const cardBodyVeiculos = document.querySelector('#cardVeiculos .card-body');
+  
+  if (!buscaVeiculoContainer) return;
+  
   if (cardBodyVeiculos) {
     cardBodyVeiculos.appendChild(buscaVeiculoContainer);
   }
   
   buscaVeiculoContainer.classList.add("d-none");
   esconderOverlay();
-  buscaVeiculoInput.value = "";
-  listaSugestoesVeiculo.innerHTML = "";
+  if (buscaVeiculoInput) buscaVeiculoInput.value = "";
+  if (listaSugestoesVeiculo) listaSugestoesVeiculo.innerHTML = "";
 }
 
-
-
-
-
-
-
-
-
-    // VOLTAR para o local original
-  const cardBodyVeiculos = document.querySelector('#cardVeiculos .card-body');
-  if (cardBodyVeiculos) {
-    cardBodyVeiculos.appendChild(buscaVeiculoContainer);
-  }
-  
-  buscaVeiculoContainer.classList.add("d-none");
-  esconderOverlay();
-  buscaVeiculoInput.value = "";
-  listaSugestoesVeiculo.innerHTML = "";
-
-
-  // Adicionar pessoa à tabela
-  function adicionarPessoaATabela(pessoa) {
-    // Verificar se a pessoa já foi adicionada
-    if (pessoasAdicionadas.some(p => p.id === pessoa.id)) {
-      alert("Esta pessoa já foi adicionada à visita");
-      return;
-    }
-    
-    pessoasAdicionadas.push(pessoa);
-    atualizarTabelaPessoas();
-    atualizarEstadoBotaoRegistrar();
-  }
-
-  // Adicionar veículo à tabela
-  function adicionarVeiculoATabela(veiculo) {
-    // Verificar se o veículo já foi adicionado
-    if (veiculosAdicionados.some(v => v.id === veiculo.id)) {
-      alert("Este veículo já foi adicionado à visita");
-      return;
-    }
-    
-    veiculosAdicionados.push(veiculo);
-    atualizarTabelaVeiculos();
-  }
-
-  // Atualizar tabela de pessoas
-  function atualizarTabelaPessoas() {
-    if (pessoasAdicionadas.length === 0) {
-      tbPessoas.innerHTML = `
-        <tr>
-          <td colspan="4" class="text-center text-muted py-4">
-            <i class="bi bi-people me-1"></i>Nenhuma pessoa adicionada
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbPessoas.innerHTML = pessoasAdicionadas.map((pessoa, index) => `
-      <tr data-id="${pessoa.id}">
-        <td>${pessoa.nome || pessoa.nome_completo || 'N/A'}</td>
-        <td>${pessoa.empresa || pessoa.empresa_nome || 'N/A'}</td>
-        <td>${pessoa.tipo || 'Visitante'}</td>
-        <td>
-          <button class="btn btn-sm btn-danger btnRemoverPessoa" data-index="${index}">
-            <i class="bi bi-trash"></i> Remover
-          </button>
-        </td>
-      </tr>
-    `).join('');
-
-    // Adicionar eventos aos botões de remover
-    document.querySelectorAll('.btnRemoverPessoa').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const index = parseInt(e.target.closest('button').dataset.index);
-        pessoasAdicionadas.splice(index, 1);
-        atualizarTabelaPessoas();
-        atualizarEstadoBotaoRegistrar();
-      });
-    });
-
-    // Mostrar card de pessoas
-    cardPessoas.classList.remove("d-none");
-  }
-
-  // Atualizar tabela de veículos
-  function atualizarTabelaVeiculos() {
-    if (veiculosAdicionados.length === 0) {
-      tbVeiculos.innerHTML = `
-        <tr>
-          <td colspan="4" class="text-center text-muted py-4">
-            <i class="bi bi-car-front me-1"></i>Nenhum veículo adicionado
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbVeiculos.innerHTML = veiculosAdicionados.map((veiculo, index) => `
-      <tr data-id="${veiculo.id}">
-        <td>${veiculo.placa || 'N/A'}</td>
-        <td>${veiculo.modelo || veiculo.marca || 'N/A'}</td>
-        <td>${veiculo.empresa || veiculo.empresa_nome || 'N/A'}</td>
-        <td>
-          <button class="btn btn-sm btn-danger btnRemoverVeiculo" data-index="${index}">
-            <i class="bi bi-trash"></i> Remover
-          </button>
-        </td>
-      </tr>
-    `).join('');
-
-    // Adicionar eventos aos botões de remover
-    document.querySelectorAll('.btnRemoverVeiculo').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const index = parseInt(e.target.closest('button').dataset.index);
-        veiculosAdicionados.splice(index, 1);
-        atualizarTabelaVeiculos();
-      });
-    });
-
-    // Mostrar card de veículos
-    cardVeiculos.classList.remove("d-none");
-  }
-
-  // Atualizar estado do botão Registrar
-  function atualizarEstadoBotaoRegistrar() {
-    // Habilitar botão Registrar apenas se houver pelo menos uma pessoa
-    btnRegistrar.disabled = pessoasAdicionadas.length === 0;
-  }
-
+// Buscar pessoas na API
 async function buscarPessoas(query) {
   try {
-    // URL CORRETA do DRF
     const resp = await fetch(`/api/pessoas/pessoas/buscar/?q=${encodeURIComponent(query)}`, {
+      credentials: 'same-origin',
       headers: {
         "X-CSRFToken": csrftoken,
+        "Accept": "application/json",
       },
     });
     
@@ -275,10 +177,11 @@ async function buscarPessoas(query) {
 // Buscar veículos na API
 async function buscarVeiculos(query) {
   try {
-    // URL CORRETA do DRF
     const resp = await fetch(`/api/veiculos/veiculos/buscar/?q=${encodeURIComponent(query)}`, {
+      credentials: 'same-origin',
       headers: {
         "X-CSRFToken": csrftoken,
+        "Accept": "application/json",
       },
     });
     
@@ -296,296 +199,595 @@ async function buscarVeiculos(query) {
   }
 }
 
-  // CRIAR VISITA (apenas na memória do navegador)
-  function criarVisitaLocal() {
-    const motivo = motivoInput.value.trim();
-    const autorizado = responsavelInput.value.trim();
+// Adicionar pessoa à tabela (apenas para nova visita)
+function adicionarPessoaATabela(pessoa) {
+  if (isModoGerenciamento()) {
+    // No modo gerenciamento, adicionar diretamente à visita existente
+    adicionarPessoaNaVisitaExistente(pessoa.id);
+    return;
+  }
+  
+  // Código original para nova visita
+  if (pessoasAdicionadas.some(p => p.id === pessoa.id)) {
+    alert("Esta pessoa já foi adicionada à visita");
+    return;
+  }
+  
+  pessoasAdicionadas.push(pessoa);
+  atualizarTabelaPessoas();
+  atualizarEstadoBotaoRegistrar();
+}
 
-    if (!motivo || !autorizado) {
-      alert("Informe o motivo e o responsável");
-      return false;
-    }
+// Adicionar veículo à tabela (apenas para nova visita)
+function adicionarVeiculoATabela(veiculo) {
+  if (isModoGerenciamento()) {
+    // No modo gerenciamento, adicionar diretamente à visita existente
+    adicionarVeiculoNaVisitaExistente(veiculo.id);
+    return;
+  }
+  
+  // Código original para nova visita
+  if (veiculosAdicionados.some(v => v.id === veiculo.id)) {
+    alert("Este veículo já foi adicionado à visita");
+    return;
+  }
+  
+  veiculosAdicionados.push(veiculo);
+  atualizarTabelaVeiculos();
+}
 
-    // Criar objeto de visita na memória
-    grupoVisita = {
-      motivo: motivo,
-      autorizado_por: autorizado,
-      data_criacao: new Date(),
-      pessoas: [],
-      veiculos: []
-    };
-
-    // Mostrar badge
-    const badge = document.getElementById("badgeGrupo");
-    badge.textContent = `Visita em criação`;
-    badge.classList.remove("d-none");
-
-    // Mostrar botões de ação
-    acoesDiv.classList.remove("d-none");
-
-    // Desabilitar campos de motivo e responsável (opcional)
-    motivoInput.disabled = true;
-    responsavelInput.disabled = true;
-
-    // Mudar botão para Cancelar
-    btnCriar.innerHTML = '<i class="bi bi-x-circle me-1"></i>Cancelar Visita';
-    btnCriar.classList.remove("btn-primary");
-    btnCriar.classList.add("btn-danger");
-
-    return true;
+// Atualizar tabela de pessoas (apenas para nova visita)
+function atualizarTabelaPessoas() {
+  if (isModoGerenciamento()) return;
+  
+  const tbPessoas = document.getElementById("tbPessoas");
+  const cardPessoas = document.getElementById("cardPessoas");
+  
+  if (!tbPessoas) return;
+  
+  if (pessoasAdicionadas.length === 0) {
+    tbPessoas.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center text-muted py-4">
+          <i class="bi bi-people me-1"></i>Nenhuma pessoa adicionada
+        </td>
+      </tr>
+    `;
+    if (cardPessoas) cardPessoas.classList.add("d-none");
+    return;
   }
 
-  // CANCELAR VISITA (limpar memória)
-  function cancelarVisita() {
-    if (confirm("Deseja realmente cancelar esta visita? Todos os dados serão perdidos.")) {
-      // Limpar arrays
-      pessoasAdicionadas = [];
-      veiculosAdicionados = [];
-      grupoVisita = null;
+  tbPessoas.innerHTML = pessoasAdicionadas.map((pessoa, index) => `
+    <tr data-id="${pessoa.id}">
+      <td>${pessoa.nome || pessoa.nome_completo || 'N/A'}</td>
+      <td>${pessoa.empresa || pessoa.empresa_nome || 'N/A'}</td>
+      <td>${pessoa.tipo || 'Visitante'}</td>
+      <td>
+        <button class="btn btn-sm btn-danger btnRemoverPessoa" data-index="${index}">
+          <i class="bi bi-trash"></i> Remover
+        </button>
+      </td>
+    </tr>
+  `).join('');
 
-      // Limpar tabelas
+  // Adicionar eventos aos botões de remover
+  document.querySelectorAll('.btnRemoverPessoa').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const index = parseInt(e.target.closest('button').dataset.index);
+      pessoasAdicionadas.splice(index, 1);
       atualizarTabelaPessoas();
+      atualizarEstadoBotaoRegistrar();
+    });
+  });
+
+  if (cardPessoas) cardPessoas.classList.remove("d-none");
+}
+
+// Atualizar tabela de veículos (apenas para nova visita)
+function atualizarTabelaVeiculos() {
+  if (isModoGerenciamento()) return;
+  
+  const tbVeiculos = document.getElementById("tbVeiculos");
+  const cardVeiculos = document.getElementById("cardVeiculos");
+  
+  if (!tbVeiculos) return;
+  
+  if (veiculosAdicionados.length === 0) {
+    tbVeiculos.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center text-muted py-4">
+          <i class="bi bi-car-front me-1"></i>Nenhum veículo adicionado
+        </td>
+      </tr>
+    `;
+    if (cardVeiculos) cardVeiculos.classList.add("d-none");
+    return;
+  }
+
+  tbVeiculos.innerHTML = veiculosAdicionados.map((veiculo, index) => `
+    <tr data-id="${veiculo.id}">
+      <td>${veiculo.placa || 'N/A'}</td>
+      <td>${veiculo.modelo || veiculo.marca || 'N/A'}</td>
+      <td>${veiculo.empresa || veiculo.empresa_nome || 'N/A'}</td>
+      <td>
+        <button class="btn btn-sm btn-danger btnRemoverVeiculo" data-index="${index}">
+          <i class="bi bi-trash"></i> Remover
+        </button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.querySelectorAll('.btnRemoverVeiculo').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const index = parseInt(e.target.closest('button').dataset.index);
+      veiculosAdicionados.splice(index, 1);
       atualizarTabelaVeiculos();
+    });
+  });
 
-      // Esconder elementos
-      document.getElementById("badgeGrupo").classList.add("d-none");
-      acoesDiv.classList.add("d-none");
-      cardPessoas.classList.add("d-none");
-      cardVeiculos.classList.add("d-none");
+  if (cardVeiculos) cardVeiculos.classList.remove("d-none");
+}
 
-      // Restaurar campos
-      motivoInput.disabled = false;
-      responsavelInput.disabled = false;
+// Atualizar estado do botão Registrar (apenas para nova visita)
+function atualizarEstadoBotaoRegistrar() {
+  if (isModoGerenciamento()) return;
+  
+  const btnRegistrar = document.getElementById("btnRegistrar");
+  if (btnRegistrar) {
+    btnRegistrar.disabled = pessoasAdicionadas.length === 0;
+  }
+}
 
-      // Restaurar botão Criar
+// CRIAR VISITA (apenas para nova visita)
+function criarVisitaLocal() {
+  if (isModoGerenciamento()) return false;
+  
+  const motivoInput = document.getElementById("motivo");
+  const responsavelInput = document.getElementById("responsavel");
+  const btnCriar = document.getElementById("btnCriarCancelar");
+  
+  if (!motivoInput || !responsavelInput || !btnCriar) return false;
+
+  const motivo = motivoInput.value.trim();
+  const autorizado = responsavelInput.value.trim();
+
+  if (!motivo || !autorizado) {
+    alert("Informe o motivo e o responsável");
+    return false;
+  }
+
+  grupoVisita = {
+    motivo: motivo,
+    autorizado_por: autorizado,
+    data_criacao: new Date(),
+    pessoas: [],
+    veiculos: []
+  };
+
+  const badge = document.getElementById("badgeGrupo");
+  if (badge) {
+    badge.textContent = `Visita em criação`;
+    badge.classList.remove("d-none");
+  }
+
+  const acoesDiv = document.getElementById("acoes");
+  if (acoesDiv) acoesDiv.classList.remove("d-none");
+
+  motivoInput.disabled = true;
+  responsavelInput.disabled = true;
+
+  btnCriar.innerHTML = '<i class="bi bi-x-circle me-1"></i>Cancelar Visita';
+  btnCriar.classList.remove("btn-primary");
+  btnCriar.classList.add("btn-danger");
+
+  return true;
+}
+
+// CANCELAR VISITA (apenas para nova visita)
+function cancelarVisita() {
+  if (isModoGerenciamento()) return;
+  
+  if (confirm("Deseja realmente cancelar esta visita? Todos os dados serão perdidos.")) {
+    pessoasAdicionadas = [];
+    veiculosAdicionados = [];
+    grupoVisita = null;
+
+    atualizarTabelaPessoas();
+    atualizarTabelaVeiculos();
+
+    const badge = document.getElementById("badgeGrupo");
+    const acoesDiv = document.getElementById("acoes");
+    const cardPessoas = document.getElementById("cardPessoas");
+    const cardVeiculos = document.getElementById("cardVeiculos");
+    const motivoInput = document.getElementById("motivo");
+    const responsavelInput = document.getElementById("responsavel");
+    const btnCriar = document.getElementById("btnCriarCancelar");
+    const btnRegistrar = document.getElementById("btnRegistrar");
+    
+    if (badge) badge.classList.add("d-none");
+    if (acoesDiv) acoesDiv.classList.add("d-none");
+    if (cardPessoas) cardPessoas.classList.add("d-none");
+    if (cardVeiculos) cardVeiculos.classList.add("d-none");
+
+    if (motivoInput) motivoInput.disabled = false;
+    if (responsavelInput) responsavelInput.disabled = false;
+
+    if (btnCriar) {
       btnCriar.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Criar visita';
       btnCriar.classList.remove("btn-danger");
       btnCriar.classList.add("btn-primary");
-
-      // Desabilitar botão Registrar
-      btnRegistrar.disabled = true;
     }
+
+    if (btnRegistrar) btnRegistrar.disabled = true;
+  }
+}
+
+// REGISTRAR VISITA (apenas para nova visita)
+async function registrarVisita() {
+  if (isModoGerenciamento()) return;
+  
+  const btnRegistrar = document.getElementById("btnRegistrar");
+  const motivoInput = document.getElementById("motivo");
+  const responsavelInput = document.getElementById("responsavel");
+  
+  if (pessoasAdicionadas.length === 0) {
+    alert("Adicione pelo menos uma pessoa antes de registrar");
+    return;
   }
 
-  // REGISTRAR VISITA (enviar para o backend)
-  async function registrarVisita() {
-    if (pessoasAdicionadas.length === 0) {
-      alert("Adicione pelo menos uma pessoa antes de registrar");
-      return;
-    }
+  if (!confirm("Deseja registrar esta visita?")) {
+    return;
+  }
 
-    if (!confirm("Deseja registrar esta visita?")) {
-      return;
-    }
-
-    // Mostrar carregamento
+  if (btnRegistrar) {
     btnRegistrar.disabled = true;
     btnRegistrar.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Registrando...';
+  }
 
+  try {
+    const motivo = motivoInput ? motivoInput.value.trim() : '';
+    const autorizado = responsavelInput ? responsavelInput.value.trim() : '';
+    const pessoasIds = pessoasAdicionadas.map(p => p.id);
+    const veiculosIds = veiculosAdicionados.map(v => v.id);
+
+    const resp = await fetch("/api/visitas/registrar/", {
+      method: "POST",
+      credentials: 'same-origin',
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken,
+      },
+      body: JSON.stringify({
+        motivo: motivo,
+        autorizado_por: autorizado,
+        observacao: "",
+        pessoas: pessoasIds,
+        veiculos: veiculosIds,
+      }),
+    });
+
+    let data = null;
+    let text = null;
     try {
-      const motivo = motivoInput.value.trim();
-      const autorizado = responsavelInput.value.trim();
-      const pessoasIds = pessoasAdicionadas.map(p => p.id);
-      const veiculosIds = veiculosAdicionados.map(v => v.id);
+      data = await resp.json();
+    } catch (e) {
+      try { text = await resp.text(); } catch (e2) { text = null; }
+    }
 
-      const resp = await fetch("/api/visitas/registrar/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": csrftoken,
-        },
-        body: JSON.stringify({
-          motivo: motivo,
-          autorizado_por: autorizado,
-          observacao: "",
-          pessoas: pessoasIds,
-          veiculos: veiculosIds,
-        }),
-      });
+    if (!resp.ok) {
+      const errMsg = (data && (data.erro || data.detail)) || text || `HTTP ${resp.status}`;
+      console.error('Falha registrarVisita:', resp.status, errMsg);
+      throw new Error(errMsg || "Erro ao registrar visita");
+    }
 
-      const data = await resp.json();
-
-      if (!resp.ok) {
-        throw new Error(data.erro || "Erro ao registrar visita");
-      }
-
-      // Sucesso!
-      const mensagem = document.getElementById("mensagem");
+    const mensagem = document.getElementById("mensagem");
+    if (mensagem) {
       mensagem.textContent = `Visita registrada com sucesso! ID: ${data.grupo_id || data.id}`;
       mensagem.classList.remove("d-none", "alert-danger");
       mensagem.classList.add("alert-success");
+    }
 
-      // Redirecionar após 3 segundos
-      setTimeout(() => {
-        window.location.href = "/visitas/";
-      }, 3000);
+    setTimeout(() => {
+      window.location.href = "/visitas/";
+    }, 3000);
 
-    } catch (error) {
-      // Erro
-      const mensagem = document.getElementById("mensagem");
+  } catch (error) {
+    const mensagem = document.getElementById("mensagem");
+    if (mensagem) {
       mensagem.textContent = "Erro: " + error.message;
       mensagem.classList.remove("d-none", "alert-success");
       mensagem.classList.add("alert-danger");
+    }
 
-      // Restaurar botão Registrar
+    if (btnRegistrar) {
       btnRegistrar.disabled = false;
       btnRegistrar.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Registrar Visita';
     }
   }
-
-  // Event Listeners
-  function handleCriarCancelar() {
-  if (btnCriar.classList.contains("btn-danger")) {
-    cancelarVisita();
-  } else {
-    if (criarVisitaLocal()) {
-      btnCriar.removeEventListener("click", handleCriarCancelar);
-      btnCriar.addEventListener("click", cancelarVisita);
-    }
-  }
 }
 
-btnCriar.addEventListener("click", handleCriarCancelar);
+// Adicionar pessoa à visita existente (para modo gerenciamento)
+async function adicionarPessoaNaVisitaExistente(pessoaId) {
+  if (!window.visitaExistenteId) {
+    alert("Visita inválida.");
+    return;
+  }
 
-  // Botão Adicionar Pessoa
-  btnAddPessoa.addEventListener("click", mostrarBuscaPessoa);
+  const resp = await fetch("/api/visitas/pessoas/", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken,
+    },
+    body: JSON.stringify({
+      grupo: window.visitaExistenteId,
+      pessoa: pessoaId,
+    }),
+  });
 
-  // Botão Adicionar Veículo
-  btnAddVeiculo.addEventListener("click", mostrarBuscaVeiculo);
+  if (!resp.ok) {
+    let msg = `HTTP ${resp.status}`;
+    try {
+      const data = await resp.json();
+      msg = data.detail || data.erro || msg;
+    } catch {}
+    alert("Erro ao adicionar pessoa: " + msg);
+    return;
+  }
 
-  // Buscar pessoa ao digitar
-  buscaPessoaInput.addEventListener("input", async (e) => {
-    const query = e.target.value.trim();
-    if (query.length < 2) {
-      listaSugestoesPessoa.innerHTML = "";
-      return;
+  location.reload();
+}
+
+// Adicionar veículo à visita existente (para modo gerenciamento)
+async function adicionarVeiculoNaVisitaExistente(veiculoId) {
+  if (!window.visitaExistenteId) {
+    alert("Visita inválida.");
+    return;
+  }
+
+  const resp = await fetch("/api/visitas/veiculos/", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrftoken,
+    },
+    body: JSON.stringify({
+      grupo: window.visitaExistenteId,
+      veiculo: veiculoId,
+    }),
+  });
+
+  if (!resp.ok) {
+    let msg = `HTTP ${resp.status}`;
+    try {
+      const data = await resp.json();
+      msg = data.detail || data.erro || msg;
+    } catch {}
+    alert("Erro ao adicionar veículo: " + msg);
+    return;
+  }
+
+  location.reload();
+}
+
+// ========== INICIALIZAÇÃO ==========
+document.addEventListener("DOMContentLoaded", () => {
+  // Atualizar variáveis globais se estiver em modo gerenciamento
+  if (window.modoGerenciamento) {
+    modoGerenciamento = window.modoGerenciamento;
+    visitaExistenteId = window.visitaExistenteId;
+  }
+
+  console.log("Modo inicializado:", { modoGerenciamento, visitaExistenteId });
+
+  // Elementos principais (apenas para nova visita)
+  const btnCriar = document.getElementById("btnCriarCancelar");
+  const btnRegistrar = document.getElementById("btnRegistrar");
+  const btnAddPessoa = document.getElementById("btnAddPessoa");
+  const btnAddVeiculo = document.getElementById("btnAddVeiculo");
+  const overlay = document.getElementById("overlay");
+
+  // Elementos de busca de pessoas (apenas para nova visita)
+  const buscaPessoaInput = document.getElementById("buscaPessoaInput");
+  const btnBuscarPessoa = document.getElementById("btnBuscarPessoa");
+  const btnNovaPessoa = document.getElementById("btnNovaPessoa");
+  const listaSugestoesPessoa = document.getElementById("listaSugestoesPessoa");
+
+  // Elementos de busca de veículos (apenas para nova visita)
+  const buscaVeiculoInput = document.getElementById("buscaVeiculoInput");
+  const btnBuscarVeiculo = document.getElementById("btnBuscarVeiculo");
+  const btnNovoVeiculo = document.getElementById("btnNovoVeiculo");
+  const listaSugestoesVeiculo = document.getElementById("listaSugestoesVeiculo");
+
+  // Só adicionar eventos se não estiver em modo gerenciamento
+  if (!isModoGerenciamento()) {
+    // Event Listeners para nova visita
+    if (btnCriar) {
+      function handleCriarCancelar() {
+        if (btnCriar.classList.contains("btn-danger")) {
+          cancelarVisita();
+        } else {
+          if (criarVisitaLocal()) {
+            btnCriar.removeEventListener("click", handleCriarCancelar);
+            btnCriar.addEventListener("click", cancelarVisita);
+          }
+        }
+      }
+      btnCriar.addEventListener("click", handleCriarCancelar);
     }
 
-    const pessoas = await buscarPessoas(query);
-    
-    if (pessoas.length === 0) {
-      listaSugestoesPessoa.innerHTML = `
-        <li class="list-group-item text-center text-muted">
-          Nenhuma pessoa encontrada
-        </li>
-      `;
-      return;
+    // Botão Adicionar Pessoa
+    if (btnAddPessoa) {
+      btnAddPessoa.addEventListener("click", mostrarBuscaPessoa);
     }
 
-    listaSugestoesPessoa.innerHTML = pessoas.map(pessoa => `
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>${pessoa.nome || pessoa.nome_completo}</strong><br>
-          <small class="text-muted">${pessoa.empresa || pessoa.empresa_nome || 'Sem empresa'}</small>
-        </div>
-        <button class="btn btn-sm btn-primary btnAdicionarPessoa" data-id="${pessoa.id}">
-          Adicionar
-        </button>
-      </li>
-    `).join('');
+    // Botão Adicionar Veículo
+    if (btnAddVeiculo) {
+      btnAddVeiculo.addEventListener("click", mostrarBuscaVeiculo);
+    }
 
-    // Adicionar eventos aos botões de adicionar pessoa
-    document.querySelectorAll('.btnAdicionarPessoa').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const pessoaId = e.target.dataset.id;
-        const pessoa = pessoas.find(p => p.id == pessoaId);
-        if (pessoa) {
-          adicionarPessoaATabela(pessoa);
-          esconderBuscaPessoa();
+    // Buscar pessoa ao digitar
+    if (buscaPessoaInput) {
+      buscaPessoaInput.addEventListener("input", async (e) => {
+        const query = e.target.value.trim();
+        if (query.length < 2) {
+          if (listaSugestoesPessoa) listaSugestoesPessoa.innerHTML = "";
+          return;
+        }
+
+        const pessoas = await buscarPessoas(query);
+        
+        if (!listaSugestoesPessoa) return;
+        
+        if (pessoas.length === 0) {
+          listaSugestoesPessoa.innerHTML = `
+            <li class="list-group-item text-center text-muted">
+              Nenhuma pessoa encontrada
+            </li>
+          `;
+          return;
+        }
+
+        listaSugestoesPessoa.innerHTML = pessoas.map(pessoa => `
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${pessoa.nome || pessoa.nome_completo}</strong><br>
+              <small class="text-muted">${pessoa.empresa || pessoa.empresa_nome || 'Sem empresa'}</small>
+            </div>
+            <button class="btn btn-sm btn-primary btnAdicionarPessoa" data-id="${pessoa.id}">
+              Adicionar
+            </button>
+          </li>
+        `).join('');
+
+        document.querySelectorAll('.btnAdicionarPessoa').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const pessoaId = e.target.dataset.id;
+            const pessoa = pessoas.find(p => p.id == pessoaId);
+            if (pessoa) {
+              adicionarPessoaATabela(pessoa);
+              esconderBuscaPessoa();
+            }
+          });
+        });
+      });
+    }
+
+    // Buscar veículo ao digitar
+    if (buscaVeiculoInput) {
+      buscaVeiculoInput.addEventListener("input", async (e) => {
+        const query = e.target.value.trim();
+        if (query.length < 2) {
+          if (listaSugestoesVeiculo) listaSugestoesVeiculo.innerHTML = "";
+          return;
+        }
+
+        const veiculos = await buscarVeiculos(query);
+        
+        if (!listaSugestoesVeiculo) return;
+        
+        if (veiculos.length === 0) {
+          listaSugestoesVeiculo.innerHTML = `
+            <li class="list-group-item text-center text-muted">
+              Nenhum veículo encontrado
+            </li>
+          `;
+          return;
+        }
+
+        listaSugestoesVeiculo.innerHTML = veiculos.map(veiculo => `
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${veiculo.placa}</strong><br>
+              <small class="text-muted">${veiculo.modelo || veiculo.marca || 'Modelo não informado'}</small>
+            </div>
+            <button class="btn btn-sm btn-primary btnAdicionarVeiculo" data-id="${veiculo.id}">
+              Adicionar
+            </button>
+          </li>
+        `).join('');
+
+        document.querySelectorAll('.btnAdicionarVeiculo').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const veiculoId = e.target.dataset.id;
+            const veiculo = veiculos.find(v => v.id == veiculoId);
+            if (veiculo) {
+              adicionarVeiculoATabela(veiculo);
+              esconderBuscaVeiculo();
+            }
+          });
+        });
+      });
+    }
+
+    // Botão Buscar Pessoa
+    if (btnBuscarPessoa) {
+      btnBuscarPessoa.addEventListener("click", () => {
+        const query = buscaPessoaInput ? buscaPessoaInput.value.trim() : '';
+        if (query.length >= 2 && buscaPessoaInput) {
+          buscaPessoaInput.dispatchEvent(new Event('input'));
         }
       });
-    });
-  });
-
-  // Buscar veículo ao digitar
-  buscaVeiculoInput.addEventListener("input", async (e) => {
-    const query = e.target.value.trim();
-    if (query.length < 2) {
-      listaSugestoesVeiculo.innerHTML = "";
-      return;
     }
 
-    const veiculos = await buscarVeiculos(query);
-    
-    if (veiculos.length === 0) {
-      listaSugestoesVeiculo.innerHTML = `
-        <li class="list-group-item text-center text-muted">
-          Nenhum veículo encontrado
-        </li>
-      `;
-      return;
-    }
-
-    listaSugestoesVeiculo.innerHTML = veiculos.map(veiculo => `
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>${veiculo.placa}</strong><br>
-          <small class="text-muted">${veiculo.modelo || veiculo.marca || 'Modelo não informado'}</small>
-        </div>
-        <button class="btn btn-sm btn-primary btnAdicionarVeiculo" data-id="${veiculo.id}">
-          Adicionar
-        </button>
-      </li>
-    `).join('');
-
-    // Adicionar eventos aos botões de adicionar veículo
-    document.querySelectorAll('.btnAdicionarVeiculo').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const veiculoId = e.target.dataset.id;
-        const veiculo = veiculos.find(v => v.id == veiculoId);
-        if (veiculo) {
-          adicionarVeiculoATabela(veiculo);
-          esconderBuscaVeiculo();
+    // Botão Buscar Veículo
+    if (btnBuscarVeiculo) {
+      btnBuscarVeiculo.addEventListener("click", () => {
+        const query = buscaVeiculoInput ? buscaVeiculoInput.value.trim() : '';
+        if (query.length >= 2 && buscaVeiculoInput) {
+          buscaVeiculoInput.dispatchEvent(new Event('input'));
         }
       });
+    }
+
+    // Botão Nova Pessoa
+    if (btnNovaPessoa) {
+      btnNovaPessoa.addEventListener("click", () => {
+        alert("Funcionalidade de cadastrar nova pessoa será implementada aqui");
+      });
+    }
+
+    // Botão Novo Veículo
+    if (btnNovoVeiculo) {
+      btnNovoVeiculo.addEventListener("click", () => {
+        alert("Funcionalidade de cadastrar novo veículo será implementada aqui");
+      });
+    }
+
+    // Fechar busca ao clicar no overlay
+    if (overlay) {
+      overlay.addEventListener("click", () => {
+        esconderBuscaPessoa();
+        esconderBuscaVeiculo();
+      });
+    }
+
+    // Fechar com Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        esconderBuscaPessoa();
+        esconderBuscaVeiculo();
+      }
     });
-  });
 
-  // Botão Buscar Pessoa
-  btnBuscarPessoa.addEventListener("click", () => {
-    const query = buscaPessoaInput.value.trim();
-    if (query.length >= 2) {
-      buscaPessoaInput.dispatchEvent(new Event('input'));
+    // Registrar visita
+    if (btnRegistrar) {
+      btnRegistrar.addEventListener("click", registrarVisita);
     }
-  });
 
-  // Botão Buscar Veículo
-  btnBuscarVeiculo.addEventListener("click", () => {
-    const query = buscaVeiculoInput.value.trim();
-    if (query.length >= 2) {
-      buscaVeiculoInput.dispatchEvent(new Event('input'));
-    }
-  });
-
-  // Botão Nova Pessoa
-  btnNovaPessoa.addEventListener("click", () => {
-    alert("Funcionalidade de cadastrar nova pessoa será implementada aqui");
-    // Exemplo: window.location.href = "/pessoas/nova/";
-  });
-
-  // Botão Novo Veículo
-  btnNovoVeiculo.addEventListener("click", () => {
-    alert("Funcionalidade de cadastrar novo veículo será implementada aqui");
-    // Exemplo: window.location.href = "/veiculos/novo/";
-  });
-
-  // Fechar busca ao clicar no overlay
-  overlay.addEventListener("click", () => {
-    esconderBuscaPessoa();
-    esconderBuscaVeiculo();
-  });
-
-  // Fechar com Escape
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      esconderBuscaPessoa();
-      esconderBuscaVeiculo();
-    }
-  });
-
-  // Registrar visita
-  btnRegistrar.addEventListener("click", registrarVisita);
-
-  // Inicializar estado do botão Registrar
-  atualizarEstadoBotaoRegistrar();
+    // Inicializar estado do botão Registrar
+    atualizarEstadoBotaoRegistrar();
+  }
 });
+
+// EXPORTAR FUNÇÕES GLOBAIS PARA USO EM OUTROS ARQUIVOS
+window.mostrarBuscaPessoa = mostrarBuscaPessoa;
+window.mostrarBuscaVeiculo = mostrarBuscaVeiculo;
+window.buscarPessoas = buscarPessoas;
+window.buscarVeiculos = buscarVeiculos;
+window.adicionarPessoaATabela = adicionarPessoaATabela;
+window.adicionarVeiculoATabela = adicionarVeiculoATabela;
+window.adicionarPessoaNaVisitaExistente = adicionarPessoaNaVisitaExistente;
+window.adicionarVeiculoNaVisitaExistente = adicionarVeiculoNaVisitaExistente;
