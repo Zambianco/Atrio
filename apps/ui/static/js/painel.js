@@ -59,96 +59,11 @@ async function carregarPainel() {
 }
 
 function abrirGrupo(grupoId) {
-  if (!dadosCache) return;
-
-  visitaAtualGrupo = grupoId;
-
-  const pessoas = dadosCache.pessoas.filter(p => p.grupo_id === grupoId);
-  const veiculos = dadosCache.veiculos.filter(v => v.grupo_id === grupoId);
-  const base = pessoas[0] || veiculos[0] || {};
-
-  // INFO PRINCIPAL (igual ao seu antigo)
-  document.getElementById('v-id').textContent = grupoId;
-  document.getElementById('v-motivo').textContent = base.motivo || '-';
-  document.getElementById('v-responsavel').textContent = base.responsavel || '-';
-  document.getElementById('v-inicio').textContent = formatarData(base.entrada);
-  document.getElementById('v-fim').textContent = base.saida ? formatarData(base.saida) : '-';
-
-  // STATUS
-  const statusEl = document.getElementById('v-status');
-  const encerrada = !!base.saida;
-  statusEl.textContent = encerrada ? 'ENCERRADA' : 'ABERTA';
-  statusEl.className = 'badge ' + (encerrada ? 'bg-danger' : 'bg-success');
-
-  // CONTADORES (igual ao seu antigo)
-  document.getElementById('v-total-pessoas').textContent = pessoas.length;
-  document.getElementById('v-presentes-pessoas').textContent =
-    pessoas.filter(p => !p.saida).length;
-
-  document.getElementById('v-total-veiculos').textContent = veiculos.length;
-  document.getElementById('v-presentes-veiculos').textContent =
-    veiculos.filter(v => !v.saida).length;
-
-  // MOSTRAR/OCULTAR BOTÃO ENCERRAR
-  const btnEncerrar = document.getElementById('btnEncerrarVisita');
-  if (!encerrada) btnEncerrar.classList.remove('d-none');
-  else btnEncerrar.classList.add('d-none');
-
-  // LISTAS (render rápido com cache, igual ao seu antigo)
-  const ulP = document.getElementById('lista-pessoas');
-  const ulV = document.getElementById('lista-veiculos');
-  ulP.innerHTML = '';
-  ulV.innerHTML = '';
-
-  pessoas.forEach(p => {
-    ulP.innerHTML += `
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>${p.nome}</strong> (${p.empresa || '-'})
-          <span class="badge ms-2 ${estaDentro(p) ? 'bg-success' : 'bg-secondary'}">
-            ${estaDentro(p) ? 'DENTRO' : 'SAIU'}
-          </span>
-        </div>
-        ${!encerrada ? `
-          <button class="btn btn-sm ${estaDentro(p) ? 'btn-outline-danger' : 'btn-outline-success'}"
-            onclick="${estaDentro(p)
-              ? `alterarStatusPessoa(${grupoId}, ${p.id})`
-              : `registrarEntradaPessoa(${grupoId}, ${p.pessoa_id || 'null'})`}">
-            ${estaDentro(p) ? 'Registrar Saída' : 'Registrar Entrada'}
-          </button>
-        ` : ''}
-      </li>`;
-  });
-
-  veiculos.forEach(v => {
-    ulV.innerHTML += `
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <strong>${v.placa}</strong> — ${v.modelo || 'Sem modelo'}
-          <span class="badge ms-2 ${estaDentro(v) ? 'bg-success' : 'bg-secondary'}">
-            ${estaDentro(v) ? 'DENTRO' : 'SAIU'}
-          </span>
-        </div>
-        ${!encerrada ? `
-          <button class="btn btn-sm ${!v.saida ? 'btn-outline-danger' : 'btn-outline-success'}"
-            onclick="${!v.saida
-              ? `alterarStatusVeiculo(${grupoId}, ${v.id})`
-              : `registrarEntradaVeiculo(${grupoId}, ${v.veiculo_id || 'null'})`}">
-            ${!v.saida ? 'Registrar Saída' : 'Registrar Entrada'}
-          </button>
-        ` : ''}
-      </li>`;
-  });
-
-  document.getElementById('v-encerramento').textContent =
-    base.saida ? `Visita encerrada em ${formatarData(base.saida)}` : '';
-
-  // abre modal como antes
-  new bootstrap.Modal(document.getElementById('modalVisita')).show();
-
-  // aqui é a única “mudança”: troca o conteúdo do modal pelo resumo completo (inclui quem já saiu)
-  carregarResumoGrupo(grupoId);
+  // reutiliza exatamente o mesmo modal da consulta
+  visitaAtualId = grupoId;
+  abrirModal(grupoId);
 }
+
 
 async function carregarResumoGrupo(grupoId) {
   try {

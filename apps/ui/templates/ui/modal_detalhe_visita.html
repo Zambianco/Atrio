@@ -1,0 +1,30 @@
+<!-- Partial: Modal de Detalhes da Visita -->
+<!-- Este arquivo é incluído onde for necessário -->
+<div class="modal fade" id="modalVisita" tabindex="-1" aria-labelledby="modalVisitaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalVisitaLabel">
+          <i class="bi bi-info-circle me-2"></i>Detalhes da Visita
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalVisitaBody">
+        <!-- Conteúdo do modal será carregado via JavaScript -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-primary" onclick="gerenciarVisita()">
+          <i class="bi bi-gear me-1"></i>Gerenciar visita
+        </button>
+
+        <button class="btn btn-secondary" data-bs-dismiss="modal">
+          Fechar
+        </button>
+
+        <button class="btn btn-primary no-print" onclick="imprimirComprovante()">
+          Imprimir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
