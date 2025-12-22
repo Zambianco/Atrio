@@ -35,11 +35,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.btnAdicionarVeiculo').forEach(btn => {
           btn.addEventListener('click', (ev) => {
             const id = ev.currentTarget.dataset.id;
-            if (typeof adicionarVeiculoNaVisitaExistente === 'function') {
-              adicionarVeiculoNaVisitaExistente(id);
-            } else if (typeof adicionarVeiculoATabela === 'function') {
-              const veiculo = veiculos.find(v => v.id == id);
-              if (veiculo) adicionarVeiculoATabela(veiculo);
+            // Se estamos em modo gerenciamento, usar a função de gerenciar
+            if (window.modoGerenciamento === true) {
+              if (typeof adicionarVeiculoNaVisitaExistente === 'function') {
+                adicionarVeiculoNaVisitaExistente(id);
+              }
+            } else {
+              // Caso contrário, adicionar à tabela de nova visita
+              if (typeof adicionarVeiculoATabela === 'function') {
+                const veiculo = veiculos.find(v => v.id == id);
+                if (veiculo) adicionarVeiculoATabela(veiculo);
+              }
             }
           });
         });

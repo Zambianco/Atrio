@@ -36,11 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.btnAdicionarPessoa').forEach(btn => {
           btn.addEventListener('click', (ev) => {
             const id = ev.currentTarget.dataset.id;
-            if (typeof adicionarPessoaNaVisitaExistente === 'function') {
-              adicionarPessoaNaVisitaExistente(id);
-            } else if (typeof adicionarPessoaATabela === 'function') {
-              const pessoa = pessoas.find(p => p.id == id);
-              if (pessoa) adicionarPessoaATabela(pessoa);
+            // Se estamos em modo gerenciamento, usar a função de gerenciar
+            if (window.modoGerenciamento === true) {
+              if (typeof adicionarPessoaNaVisitaExistente === 'function') {
+                adicionarPessoaNaVisitaExistente(id);
+              }
+            } else {
+              // Caso contrário, adicionar à tabela de nova visita
+              if (typeof adicionarPessoaATabela === 'function') {
+                const pessoa = pessoas.find(p => p.id == id);
+                if (pessoa) adicionarPessoaATabela(pessoa);
+              }
             }
           });
         });
