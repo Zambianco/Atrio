@@ -1,5 +1,5 @@
 // Inicializa o modal de seleção de veículo e expõe a instância globalmente
-let modalBuscaVeiculo = null;
+if (typeof modalBuscaVeiculo === 'undefined') window.modalBuscaVeiculo = window.modalBuscaVeiculo || null;
 
 document.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('modalBuscaVeiculo');
@@ -22,17 +22,30 @@ document.addEventListener('DOMContentLoaded', () => {
           lista.innerHTML = `<li class="list-group-item text-center text-muted">Nenhum veículo encontrado</li>`;
           return;
         }
-        lista.innerHTML = veiculos.map(v => `
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <strong>${v.placa}</strong><br>
-              <small class="text-muted">${v.modelo || '—'}</small>
-            </div>
-            <button class="btn btn-sm btn-primary btnAdicionarVeiculo" data-id="${v.id}">Adicionar</button>
-          </li>
-        `).join('');
+
+        const veiculosEmVisita = await obterVeiculosEmVisita();
+
+        lista.innerHTML = veiculos.map(v => {
+          const visitaAtual = veiculosEmVisita[v.id];
+          const disabled = visitaAtual ? 'disabled' : '';
+          const btnClass = visitaAtual ? 'btn-outline-secondary' : 'btn-primary';
+          const label = visitaAtual ? `Em visita #${visitaAtual}` : 'Adicionar';
+          return `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>${v.placa}</strong><br>
+                <small class="text-muted">${v.modelo || 'Modelo não informado'}</small>
+              </div>
+              <div class="d-flex align-items-center">
+                <button class="btn btn-sm ${btnClass} btnAdicionarVeiculo" data-id="${v.id}" ${disabled}>${label}</button>
+                ${visitaAtual ? `<a href="/visitas/${visitaAtual}/" target="_blank" class="ms-2 text-decoration-none link-visita-veiculo" data-visita="${visitaAtual}">Abrir</a>` : ''}
+              </div>
+            </li>
+          `;
+        }).join('');
 
         document.querySelectorAll('.btnAdicionarVeiculo').forEach(btn => {
+          if (btn.disabled) return;
           btn.addEventListener('click', (ev) => {
             const id = ev.currentTarget.dataset.id;
             // Se estamos em modo gerenciamento, usar a função de gerenciar
@@ -53,3 +66,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+let cacheVeiculosEmVisita = null;
+async function obterVeiculosEmVisita() {
+  if (typeof listarVeiculosEmVisita === 'function') {
+    return listarVeiculosEmVisita();
+  }
+  if (cacheVeiculosEmVisita) return cacheVeiculosEmVisita;
+
+  try {
+    const resp = await fetch('/api/visitas/veiculos/');
+    const data = await resp.json();
+    cacheVeiculosEmVisita = data
+      .filter(item => !item.data_saida)
+      .reduce((acc, item) => {
+        acc[item.veiculo] = item.grupo;
+        return acc;
+      }, {});
+  } catch (e) {
+    console.error('Falha ao buscar veiculos em visita', e);
+    cacheVeiculosEmVisita = {};
+  }
+  return cacheVeiculosEmVisita;
+}

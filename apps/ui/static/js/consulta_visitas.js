@@ -109,6 +109,10 @@ function aplicarFiltros() {
 
 function renderizarLista() {
   const lista = document.getElementById('listaVisitas');
+  
+  // Se o elemento não existir (ex: em painel.html), sair
+  if (!lista) return;
+  
   lista.innerHTML = '';
 
   if (!visitasFiltradas.length) {

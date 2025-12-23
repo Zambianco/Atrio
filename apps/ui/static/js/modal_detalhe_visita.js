@@ -1,6 +1,16 @@
 let visitaAtualId = null;
 let modalVisitaInstance = null;
 
+function resolveCSRFToken() {
+  if (typeof getCSRFToken === 'function') return getCSRFToken();
+  if (typeof csrftoken !== 'undefined') return csrftoken;
+
+  const cookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('csrftoken='));
+  return cookie ? cookie.split('=')[1] : '';
+}
+
 function abrirModal(id) {
   visitaAtualId = id;
   const v = todasVisitas.find(x => x.id === id);
@@ -105,13 +115,12 @@ async function registrarEntradaPessoa(id) {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': getCSRFToken()
+      'X-CSRFToken': resolveCSRFToken()
     },
     body: JSON.stringify({ data_saida: null })
   });
 
-  await carregarVisitas();      // ⬅️ esperar
-  abrirModal(visitaAtualId);    // ⬅️ só depois
+  await recarregarListaEReabrir();
 }
 
 async function registrarEntradaVeiculo(id) {
@@ -119,13 +128,12 @@ async function registrarEntradaVeiculo(id) {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': getCSRFToken()
+      'X-CSRFToken': resolveCSRFToken()
     },
     body: JSON.stringify({ data_saida: null })
   });
 
-  await carregarVisitas();      // ⬅️ obrigatório
-  abrirModal(visitaAtualId);    // ⬅️ depois
+  await recarregarListaEReabrir();
 }
 
 async function sairPessoa(id) {
@@ -133,35 +141,55 @@ async function sairPessoa(id) {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': getCSRFToken()
+      'X-CSRFToken': resolveCSRFToken()
     },
     body: JSON.stringify({ data_saida: new Date().toISOString() })
   });
 
-  await carregarVisitas();      // ⬅️
-  abrirModal(visitaAtualId);    // ⬅️
+  await recarregarListaEReabrir();
 }
 async function sairVeiculo(id) {
   await fetch(`/api/visitas/veiculos/${id}/`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': getCSRFToken()
+      'X-CSRFToken': resolveCSRFToken()
     },
     body: JSON.stringify({
       data_saida: new Date().toISOString()
     })
   });
 
-  await carregarVisitas();      // ⬅️ obrigatório
-  abrirModal(visitaAtualId);    // ⬅️ depois
+  await recarregarListaEReabrir();
 }
 
 async function encerrarVisita(id) {
   await fetch(`/api/visitas/grupos/${id}/encerrar/`, {
     method: 'POST',
-    headers: { 'X-CSRFToken': getCSRFToken() }
+    headers: { 'X-CSRFToken': resolveCSRFToken() }
   });
   modalVisitaInstance.hide();
-  carregarVisitas();
+  if (typeof carregarVisitas === 'function') {
+    carregarVisitas();
+  } else {
+    window.location.reload();
+  }
+}
+
+// Alias para compatibilidade com gerenciar_visita.html
+function registrarSaidaPessoa(id) {
+  return sairPessoa(id);
+}
+
+function registrarSaidaVeiculo(id) {
+  return sairVeiculo(id);
+}
+
+async function recarregarListaEReabrir() {
+  if (typeof carregarVisitas === 'function') {
+    await carregarVisitas();
+    abrirModal(visitaAtualId);
+  } else {
+    window.location.reload();
+  }
 }

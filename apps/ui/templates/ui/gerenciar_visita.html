@@ -23,6 +23,7 @@
 
 <!-- IMPORTANTE: Carregar nova_visita.js primeiro -->
 <script src="{% static 'js/nova_visita.js' %}"></script>
+<script src="{% static 'js/modal_detalhe_visita.js' %}"></script>
 <script src="{% static 'js/modal_seleciona_pessoa.js' %}"></script>
 <script src="{% static 'js/modal_seleciona_veiculo.js' %}"></script>
 <script src="{% static 'js/gerenciar_visita.js' %}"></script>
@@ -72,7 +73,7 @@
     </div>
 
     <div class="d-flex gap-2">
-      <a href="{% url 'ui:visitas' %}" class="btn btn-outline-secondary">
+      <a href="{% url 'ui:visitas' %}" class="btn btn-outline-secondary" id="btnVoltarVisitas" data-default-url="{% url 'ui:visitas' %}">
         <i class="bi bi-arrow-left me-1"></i>Voltar
       </a>
 
@@ -219,5 +220,34 @@
 <!-- Modais reutilizáveis para busca (pessoa / veículo) -->
 {% include 'ui/modal_seleciona_pessoa.html' %}
 {% include 'ui/modal_seleciona_veiculo.html' %}
+
+<script>
+  (function() {
+    const btnVoltar = document.getElementById('btnVoltarVisitas');
+    if (!btnVoltar) return;
+
+    btnVoltar.addEventListener('click', function(event) {
+      event.preventDefault();
+      const ref = document.referrer;
+
+      try {
+        // volta para a página que trouxe o usuário, se for mesma origem
+        if (ref) {
+          const refUrl = new URL(ref, window.location.origin);
+          if (refUrl.origin === window.location.origin && refUrl.href !== window.location.href) {
+            window.location.href = refUrl.href;
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('Referer inválido para redirecionar:', e);
+      }
+
+      // fallback para lista de visitas
+      const fallback = btnVoltar.dataset.defaultUrl || '{% url "ui:visitas" %}';
+      window.location.href = fallback;
+    });
+  })();
+</script>
 
 {% endblock %}
