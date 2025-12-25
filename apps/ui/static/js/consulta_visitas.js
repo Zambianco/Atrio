@@ -158,22 +158,24 @@ function renderizarLista() {
 
 
 function atualizarEstatisticas() {
-  document.getElementById('cntAbertas').textContent =
-    todasVisitas.filter(v => v.status === 'aberta').length;
+  // Atualiza estatísticas se os elementos existirem na página
+  const cntAbertas = document.getElementById('cntAbertas');
+  if (cntAbertas) cntAbertas.textContent = todasVisitas.filter(v => v.status === 'aberta').length;
 
-  document.getElementById('cntPessoas').textContent =
-    todasVisitas.reduce(
+  const cntPessoas = document.getElementById('cntPessoas');
+  if (cntPessoas) cntPessoas.textContent = todasVisitas.reduce(
       (total, v) => total + v.pessoas.filter(p => !p.data_saida).length,
       0
     );
 
-  document.getElementById('cntVeiculos').textContent =
-    todasVisitas.reduce(
+  const cntVeiculos = document.getElementById('cntVeiculos');
+  if (cntVeiculos) cntVeiculos.textContent = todasVisitas.reduce(
       (total, v) => total + v.veiculos.filter(vv => !vv.data_saida).length,
       0
     );
 
-  document.getElementById('cntTotal').textContent = todasVisitas.length;
+  const cntTotal = document.getElementById('cntTotal');
+  if (cntTotal) cntTotal.textContent = todasVisitas.length;
 }
 
 

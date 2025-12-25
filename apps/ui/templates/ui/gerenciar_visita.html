@@ -26,7 +26,7 @@
 <script src="{% static 'js/modal_detalhe_visita.js' %}"></script>
 <script src="{% static 'js/modal_seleciona_pessoa.js' %}"></script>
 <script src="{% static 'js/modal_seleciona_veiculo.js' %}"></script>
-<script src="{% static 'js/gerenciar_visita.js' %}"></script>
+<script src="{% static 'js/visita.js' %}"></script>
 
 
 <style>
@@ -53,6 +53,22 @@
   .col-acao{
     text-align: right;
   }
+
+  /* Sticky footer para destaque do botão Encerrar */
+  .sticky-footer {
+    position: fixed;
+    bottom: 16px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1050;
+  }
+
+  .sticky-footer .inner {
+    pointer-events: auto;
+  }
 </style>
  
 
@@ -76,12 +92,6 @@
       <a href="{% url 'ui:visitas' %}" class="btn btn-outline-secondary" id="btnVoltarVisitas" data-default-url="{% url 'ui:visitas' %}">
         <i class="bi bi-arrow-left me-1"></i>Voltar
       </a>
-
-      {% if visita.status == 'aberta' %}
-      <button class="btn btn-danger">
-        <i class="bi bi-x-circle me-1"></i>Encerrar visita
-      </button>
-      {% endif %}
     </div>
   </div>
 
@@ -119,6 +129,7 @@
         <i class="bi bi-people me-2"></i>Pessoas
       </h5>
       <button
+        id="btnAddPessoaGerenciar"
         class="btn btn-sm btn-outline-primary"
         onclick="mostrarBuscaPessoa()">
         <i class="bi bi-plus"></i>Adicionar pessoa
@@ -170,6 +181,7 @@
         <i class="bi bi-truck me-2"></i>Veículos
       </h5>
       <button
+        id="btnAddVeiculoGerenciar"
         class="btn btn-sm btn-outline-primary"
         onclick="mostrarBuscaVeiculo()">
         <i class="bi bi-plus"></i>Adicionar veículo
@@ -220,6 +232,19 @@
 <!-- Modais reutilizáveis para busca (pessoa / veículo) -->
 {% include 'ui/modal_seleciona_pessoa.html' %}
 {% include 'ui/modal_seleciona_veiculo.html' %}
+
+{% if visita.status == 'aberta' %}
+  <div class="container-fluid py-3">
+    <div class="sticky-footer">
+      <div class="inner">
+        <button id="btnEncerrarGerenciar" class="btn btn-danger btn-lg shadow"
+          onclick="handleEncerrarClick()">
+          <i class="bi bi-x-circle me-1"></i>Encerrar visita
+        </button>
+      </div>
+    </div>
+  </div>
+{% endif %}
 
 <script>
   (function() {

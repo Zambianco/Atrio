@@ -1,5 +1,5 @@
 # /apps/visitas/views.py
-from datetime import timezone
+from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response

@@ -61,7 +61,13 @@ async function carregarPainel() {
 function abrirGrupo(grupoId) {
   // reutiliza exatamente o mesmo modal da consulta
   visitaAtualId = grupoId;
-  abrirModal(grupoId);
+  if (typeof window.abrirModal === 'function') {
+    window.abrirModal(grupoId);
+  } else if (typeof abrirModal === 'function') {
+    abrirModal(grupoId);
+  } else {
+    console.error('abrirModal não está disponível. Verifique se modal_detalhe_visita.js foi carregado.');
+  }
 }
 
 
@@ -249,7 +255,9 @@ async function registrarEntradaVeiculo(grupoId, veiculoId) {
 }
 
 async function encerrarVisita(grupoId) {
-  if (!confirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.')) {
+  if (!(await (window.visitaActions && typeof window.visitaActions.confirmarEncerrarVisita === 'function'
+    ? window.visitaActions.confirmarEncerrarVisita()
+    : (window.showConfirm ? window.showConfirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.', 'Encerrar visita') : Promise.resolve(window.confirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.')))))) {
     return;
   }
 
