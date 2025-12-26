@@ -11,6 +11,15 @@ function resolveCSRFToken() {
   return cookie ? cookie.split('=')[1] : '';
 }
 
+const ENCERRAR_MSG = 'Tem certeza que deseja encerrar esta visita? Todas as pessoas e ve\u00edculos ser\u00e3o marcados como fora.';
+const ENCERRAR_TITLE = 'Encerrar visita';
+function confirmarEncerrarVisita() {
+  return window.showConfirm
+    ? window.showConfirm(ENCERRAR_MSG, ENCERRAR_TITLE)
+    : Promise.resolve(window.confirm(ENCERRAR_MSG));
+}
+window.confirmarEncerrarVisita = confirmarEncerrarVisita;
+
 async function abrirModal(id) {
   visitaAtualId = id;
   let v = null;
@@ -20,7 +29,7 @@ async function abrirModal(id) {
     }
   } catch (e) { v = null; }
 
-  // Se não encontramos o grupo em `todasVisitas`, buscar resumo via API para montar um objeto mínimo
+  // Se n\u00e3o encontramos o grupo em `todasVisitas`, buscar resumo via API para montar um objeto m\u00ednimo
   if (!v) {
     try {
       const resp = await fetch(`/api/visitas/grupos/${id}/resumo/`);
@@ -40,7 +49,7 @@ async function abrirModal(id) {
           veiculos: veiculos.map(vv => ({ id: vv.id || vv.veiculo_id || null, placa: vv.placa || vv.veiculo_placa || '(sem placa)', data_saida: vv.saida || vv.data_saida || null, veiculo_id: vv.veiculo_id }))
         };
       } else {
-        console.error('Não foi possível carregar resumo do grupo', id);
+        console.error('N\u00e3o foi poss\u00edvel carregar resumo do grupo', id);
         return;
       }
     } catch (e) {
@@ -59,8 +68,8 @@ async function abrirModal(id) {
 
   const listaPessoas = v.pessoas.length
     ? v.pessoas.map(p => `
-      <div class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
+      <div class="visita-item">
+        <div class="visita-item-main">
           <span class="fw-semibold">${p.nome}</span>
           ${p.data_saida
             ? '<span class="badge bg-secondary ms-2">SAIU</span>'
@@ -73,16 +82,17 @@ async function abrirModal(id) {
                 ? `registrarEntradaPessoa(${p.id})`
                 : `sairPessoa(${p.id})`
             }">
-            ${p.data_saida ? 'Registrar Entrada' : 'Registrar Saída'}
+            ${p.data_saida ? 'Registrar Entrada' : 'Registrar Sa\u00edda'}
           </button>` : ''}
       </div>
     `).join('')
-    : '<p class="text-muted">Nenhuma pessoa registrada</p>';
+    : '<div class="text-muted">Nenhuma pessoa registrada</div>';
+
 
   const listaVeiculos = v.veiculos.length
     ? v.veiculos.map(vv => `
-      <div class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
+      <div class="visita-item">
+        <div class="visita-item-main">
           <span class="fw-semibold">${vv.placa}</span>
           ${vv.data_saida
             ? '<span class="badge bg-secondary ms-2">SAIU</span>'
@@ -95,47 +105,46 @@ async function abrirModal(id) {
                 ? `registrarEntradaVeiculo(${vv.id})`
                 : `sairVeiculo(${vv.id})`
             }">
-            ${vv.data_saida ? 'Registrar Entrada' : 'Registrar Saída'}
+            ${vv.data_saida ? 'Registrar Entrada' : 'Registrar Sa\u00edda'}
           </button>` : ''}
       </div>
     `).join('')
-    : '<p class="text-muted">Nenhum veículo registrado</p>';
+    : '<div class="text-muted">Nenhum ve\u00edculo registrado</div>';
+
 
   document.getElementById('modalVisitaBody').innerHTML = `
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <table class="table table-sm table-borderless">
-          <tr><td class="fw-bold">ID:</td><td>#${v.id}</td></tr>
-          <tr><td class="fw-bold">Motivo:</td><td>${v.motivo}</td></tr>
-          <tr><td class="fw-bold">Responsável:</td><td>${v.autorizado_por}</td></tr>
-          <tr><td class="fw-bold">Status:</td>
-            <td><span class="badge ${v.status === 'aberta' ? 'bg-success' : 'bg-danger'}">
-              ${v.status.toUpperCase()}
-            </span></td>
-          </tr>
-          <tr><td class="fw-bold">Início:</td><td>${formatarDataHora(v.data_entrada)}</td></tr>
-        </table>
+    <div class="visita-resumo mb-3">
+      <div class="resumo-card">
+        <div class="resumo-item"><span class="resumo-label">ID:</span><span>#${v.id}</span></div>
+        <div class="resumo-item"><span class="resumo-label">Motivo:</span><span>${v.motivo}</span></div>
+        <div class="resumo-item"><span class="resumo-label">Respons\u00e1vel:</span><span>${v.autorizado_por}</span></div>
+        <div class="resumo-item"><span class="resumo-label">Status:</span>
+          <span class="badge ${v.status === 'aberta' ? 'bg-success' : 'bg-danger'}">${v.status.toUpperCase()}</span>
+        </div>
+        <div class="resumo-item"><span class="resumo-label">In\u00edcio:</span><span>${formatarDataHora(v.data_entrada)}</span></div>
       </div>
-      <div class="col-md-6">
-        <table class="table table-sm table-borderless">
-          <tr><td>Total Pessoas:</td><td>${v.pessoas.length}</td></tr>
-          <tr><td>Pessoas Presentes:</td><td>${pessoasDentro}</td></tr>
-          <tr><td>Total Veículos:</td><td>${v.veiculos.length}</td></tr>
-          <tr><td>Veículos Presentes:</td><td>${veiculosDentro}</td></tr>
-        </table>
+      <div class="resumo-card">
+        <div class="resumo-item"><span class="resumo-label">Total Pessoas:</span><span>${v.pessoas.length}</span></div>
+        <div class="resumo-item"><span class="resumo-label">Pessoas Presentes:</span><span>${pessoasDentro}</span></div>
+        <div class="resumo-item"><span class="resumo-label">Total Ve\u00edculos:</span><span>${v.veiculos.length}</span></div>
+        <div class="resumo-item"><span class="resumo-label">Ve\u00edculos Presentes:</span><span>${veiculosDentro}</span></div>
       </div>
     </div>
 
-    <div class="row">
-      <div class="col-md-6">${listaPessoas}</div>
-      <div class="col-md-6">${listaVeiculos}</div>
+    <div class="visita-lists">
+      <div class="visita-list">
+        <div class="fw-semibold mb-2">Pessoas</div>
+        ${listaPessoas}
+      </div>
+      <div class="visita-list">
+        <div class="fw-semibold mb-2">Ve\u00edculos</div>
+        ${listaVeiculos}
+      </div>
     </div>
-
-    
   `;
 
   modalVisitaInstance.show();
-  // Nota: botão de Encerrar é exibido apenas na página de gerenciamento (/visitas/{id}/)
+  // Nota: bot\u00e3o de Encerrar ? exibido apenas na p\u00e1gina de gerenciamento (/visitas/{id}/)
 }
 
 function gerenciarVisita() {
@@ -184,7 +193,7 @@ async function sairPessoa(id) {
     if (r.cancelled) return;
     if (r.error) { alert(r.error); return; }
     if (r.encerrada) {
-      // encerrarVisita do módulo já disparou evento; modal fecha quando recarregar a lista
+      // encerrarVisita do m\u00f3dulo j\u00e1 disparou evento; modal fecha quando recarregar a lista
       await recarregarListaEReabrir();
       return;
     }
@@ -193,21 +202,19 @@ async function sairPessoa(id) {
   }
 
   // fallback: comportamento antigo
+  let forceEncerrar = false;
   try {
     const resumoResp = await fetch(`/api/visitas/grupos/${visitaAtualId}/resumo/`);
     if (resumoResp.ok) {
       const resumo = await resumoResp.json();
       const presentesPessoas = resumo.pessoas.filter(p => !p.saida).length;
-      const presentesVeiculos = resumo.veiculos.filter(v => !v.saida).length;
 
-      if (presentesPessoas === 1 && presentesVeiculos === 0) {
-        const confirmar = await (window.showConfirm ? window.showConfirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?', 'Último presente') : Promise.resolve(window.confirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?')));
+      if (presentesPessoas === 1) {
+        const confirmar = await (window.showConfirm
+          ? window.showConfirm('Esta \u00e9 a \u00faltima pessoa presente. Deseja encerrar a visita ap\u00f3s registrar a sa\u00edda?\nSe houver ve\u00edculo todos ter\u00e3o sua sa\u00edda registrada.', '\u00daltimo presente')
+          : Promise.resolve(window.confirm('Esta \u00e9 a \u00faltima pessoa presente. Deseja encerrar a visita ap\u00f3s registrar a sa\u00edda?\nSe houver ve\u00edculo todos ter\u00e3o sua sa\u00edda registrada.')));
         if (!confirmar) return;
-
-        const confirmarEncerrar = await (window.visitaActions && typeof window.visitaActions.confirmarEncerrarVisita === 'function'
-          ? window.visitaActions.confirmarEncerrarVisita()
-          : (window.showConfirm ? window.showConfirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.', 'Encerrar visita') : Promise.resolve(window.confirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.'))));
-        if (!confirmarEncerrar) return;
+        forceEncerrar = true;
       }
     }
   } catch (e) { console.error('Erro ao verificar resumo antes de sairPessoa:', e); }
@@ -217,6 +224,11 @@ async function sairPessoa(id) {
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': resolveCSRFToken() },
     body: JSON.stringify({ data_saida: new Date().toISOString() })
   });
+
+  if (forceEncerrar) {
+    await encerrarVisita(visitaAtualId);
+    return;
+  }
 
   await recarregarListaEReabrir();
 }
@@ -230,21 +242,19 @@ async function sairVeiculo(id) {
     return;
   }
 
+  let forceEncerrar = false;
   try {
     const resumoResp = await fetch(`/api/visitas/grupos/${visitaAtualId}/resumo/`);
     if (resumoResp.ok) {
       const resumo = await resumoResp.json();
-      const presentesPessoas = resumo.pessoas.filter(p => !p.saida).length;
       const presentesVeiculos = resumo.veiculos.filter(v => !v.saida).length;
 
-      if (presentesVeiculos === 1 && presentesPessoas === 0) {
-        const confirmar = await (window.showConfirm ? window.showConfirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?', 'Último presente') : Promise.resolve(window.confirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?')));
+      if (presentesVeiculos === 1) {
+        const confirmar = await (window.showConfirm
+          ? window.showConfirm('Este \u00e9 o \u00faltimo ve\u00edculo presente. Deseja encerrar a visita ap\u00f3s registrar a sa\u00edda?\nSe houver pessoas todas ter\u00e3o sua sa\u00edda registrada.', '\u00daltimo presente')
+          : Promise.resolve(window.confirm('Este \u00e9 o \u00faltimo ve\u00edculo presente. Deseja encerrar a visita ap\u00f3s registrar a sa\u00edda?\nSe houver pessoas todas ter\u00e3o sua sa\u00edda registrada.')));
         if (!confirmar) return;
-
-        const confirmarEncerrar = await (window.visitaActions && typeof window.visitaActions.confirmarEncerrarVisita === 'function'
-          ? window.visitaActions.confirmarEncerrarVisita()
-          : (window.showConfirm ? window.showConfirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.', 'Encerrar visita') : Promise.resolve(window.confirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.'))));
-        if (!confirmarEncerrar) return;
+        forceEncerrar = true;
       }
     }
   } catch (e) { console.error('Erro ao verificar resumo antes de sairVeiculo:', e); }
@@ -254,6 +264,11 @@ async function sairVeiculo(id) {
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': resolveCSRFToken() },
     body: JSON.stringify({ data_saida: new Date().toISOString() })
   });
+
+  if (forceEncerrar) {
+    await encerrarVisita(visitaAtualId);
+    return;
+  }
 
   await recarregarListaEReabrir();
 }
@@ -287,7 +302,7 @@ async function recarregarListaEReabrir() {
     await carregarVisitas();
     await abrirModal(visitaAtualId);
 
-    // Se após recarregar não houver ninguém dentro, encerrar automaticamente
+    // Se ap\u00f3s recarregar n\u00e3o houver ningu\u00e9m dentro, encerrar automaticamente
     try {
       const v = todasVisitas.find(x => x.id === visitaAtualId);
       if (v && v.status === 'aberta') {
@@ -304,6 +319,6 @@ async function recarregarListaEReabrir() {
   }
 }
 
-// Expor encerrarVisita globalmente para templates e outras páginas
+// Expor encerrarVisita globalmente para templates e outras p\u00e1ginas
 try { window.encerrarVisita = encerrarVisita; } catch (e) {}
 try { window.abrirModal = abrirModal; } catch (e) {}

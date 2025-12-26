@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-m0-x70)vf8(1$d7(@7q+xmv6grx64jjk&cxm$4oh2ht2q^uj74
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0', '192.168.15.15']
+ALLOWED_HOSTS = ['127.0.0.1', '0.0.0.0', '192.168.15.6']
 
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/painel/"

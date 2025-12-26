@@ -1,7 +1,100 @@
 <!-- Partial: Modal de Detalhes da Visita -->
-<!-- Este arquivo é incluído onde for necessário -->
+<!-- Este arquivo ? inclu?do onde for necess?rio -->
+<style>
+  #modalVisita .modal-footer{
+    gap: 8px;
+  }
+
+  #modalVisita .visita-resumo{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 24px;
+  }
+
+  #modalVisita .resumo-card{
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  #modalVisita .resumo-item{
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.9rem;
+    padding: 2px 0;
+  }
+
+  #modalVisita .resumo-label{
+    color: #6c757d;
+    font-weight: 600;
+  }
+
+  #modalVisita .visita-lists{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  #modalVisita .visita-item{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+
+  #modalVisita .visita-item-main{
+    min-width: 0;
+  }
+
+  #modalVisita .visita-item .badge{
+    white-space: nowrap;
+  }
+
+  #modalVisita .visita-item .btn{
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    #modalVisita .modal-dialog{
+      margin: 0.75rem;
+    }
+
+    #modalVisita .visita-resumo{
+      grid-template-columns: 1fr;
+    }
+
+    #modalVisita .visita-lists{
+      grid-template-columns: 1fr;
+    }
+
+    #modalVisita .visita-item{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #modalVisita .visita-item .btn{
+      width: 100%;
+    }
+
+    #modalVisita .modal-footer{
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #modalVisita .modal-footer .btn{
+      width: 100%;
+    }
+  }
+</style>
+
 <div class="modal fade" id="modalVisita" tabindex="-1" aria-labelledby="modalVisitaLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-md-down">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalVisitaLabel">
@@ -10,14 +103,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="modalVisitaBody">
-        <!-- Conteúdo do modal será carregado via JavaScript -->
+        <!-- Conte?do do modal ser? carregado via JavaScript -->
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline-primary" onclick="gerenciarVisita()">
           <i class="bi bi-gear me-1"></i>Gerenciar visita
         </button>
 
-        <!-- Encerrar visita agora aparece apenas na página de gerenciamento -->
+        <!-- Encerrar visita agora aparece apenas na p?gina de gerenciamento -->
 
         <button class="btn btn-secondary" data-bs-dismiss="modal">
           Fechar

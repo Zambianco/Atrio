@@ -12,12 +12,11 @@
     return cookie ? cookie.split('=')[1] : '';
   }
 
-  const ENCERRAR_MSG = 'Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.';
-  const ENCERRAR_TITLE = 'Encerrar visita';
   function confirmarEncerrarVisita() {
-    return window.showConfirm
-      ? window.showConfirm(ENCERRAR_MSG, ENCERRAR_TITLE)
-      : Promise.resolve(window.confirm(ENCERRAR_MSG));
+    if (typeof window.confirmarEncerrarVisita === 'function') {
+      return window.confirmarEncerrarVisita();
+    }
+    return Promise.resolve(false);
   }
 
   async function fetchResumo(grupoId) {
@@ -37,19 +36,20 @@
     return { ok: false, error: 'Erro ao encerrar visita' };
   }
 
-  async function registrarSaidaPessoa(grupoId, pessoaId, opts={confirmIfLast:true}) {
+  async function registrarSaidaPessoa(grupoId, pessoaId, opts={confirmIfLast:true, forceEncerrar:false, resumo:null}) {
     try {
+      let forceEncerrar = !!opts.forceEncerrar;
+      let resumo = opts.resumo || null;
       if (opts.confirmIfLast) {
-        const resumo = await fetchResumo(grupoId);
+        resumo = resumo || await fetchResumo(grupoId);
         if (resumo) {
           const presentesPessoas = resumo.pessoas.filter(p => !p.saida).length;
-          const presentesVeiculos = resumo.veiculos.filter(v => !v.saida).length;
-          if (presentesPessoas === 1 && presentesVeiculos === 0) {
-            const confirmar = await (window.showConfirm ? window.showConfirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?', 'Último presente') : Promise.resolve(window.confirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?')));
+          if (presentesPessoas === 1) {
+            const confirmar = await (window.showConfirm
+              ? window.showConfirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?\nSe houver veículo todos terão sua saída registrada.', 'Último presente')
+              : Promise.resolve(window.confirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?\nSe houver veículo todos terão sua saída registrada.')));
             if (!confirmar) return { cancelled: true };
-
-            const confirmarEncerrar = await confirmarEncerrarVisita();
-            if (!confirmarEncerrar) return { cancelled: true };
+            forceEncerrar = true;
           }
         }
       }
@@ -60,11 +60,17 @@
       }
       if (!resp.ok) return { error: 'Erro ao registrar saída' };
 
-      const resumo = await fetchResumo(grupoId);
-      window.dispatchEvent(new CustomEvent('visita:atualizada', { detail: { grupoId, resumo } }));
+      const resumoAtualizado = await fetchResumo(grupoId);
+      window.dispatchEvent(new CustomEvent('visita:atualizada', { detail: { grupoId, resumo: resumoAtualizado } }));
 
-      const pessoasDentro = resumo ? resumo.pessoas.filter(p => !p.saida).length : 0;
-      const veiculosDentro = resumo ? resumo.veiculos.filter(v => !v.saida).length : 0;
+      if (forceEncerrar) {
+        const enc = await encerrarVisita(grupoId);
+        if (!enc.ok) return { error: enc.error || 'Erro ao encerrar visita' };
+        return { encerrada: true };
+      }
+
+      const pessoasDentro = resumoAtualizado ? resumoAtualizado.pessoas.filter(p => !p.saida).length : 0;
+      const veiculosDentro = resumoAtualizado ? resumoAtualizado.veiculos.filter(v => !v.saida).length : 0;
       if (pessoasDentro === 0 && veiculosDentro === 0) {
         const enc = await encerrarVisita(grupoId);
         return { encerrada: !!enc.ok };
@@ -78,25 +84,37 @@
   }
 
   async function confirmAndRegistrarSaidaPessoa(grupoId, pessoaId) {
+    const resumo = await fetchResumo(grupoId);
+    if (resumo) {
+      const presentesPessoas = resumo.pessoas.filter(p => !p.saida).length;
+      if (presentesPessoas === 1) {
+        const confirmar = await (window.showConfirm
+          ? window.showConfirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?\nSe houver veículo todos terão sua saída registrada.', 'Último presente')
+          : Promise.resolve(window.confirm('Esta é a última pessoa presente. Deseja encerrar a visita após registrar a saída?\nSe houver veículo todos terão sua saída registrada.')));
+        if (!confirmar) return { cancelled: true };
+        return await registrarSaidaPessoa(grupoId, pessoaId, { confirmIfLast: false, forceEncerrar: true, resumo });
+      }
+    }
     if (!(await (window.showConfirm ? window.showConfirm('Registrar saída da pessoa?', 'Confirmar saída') : Promise.resolve(window.confirm('Registrar saída da pessoa?'))))) {
       return { cancelled: true };
     }
-    return await registrarSaidaPessoa(grupoId, pessoaId, { confirmIfLast: true });
+    return await registrarSaidaPessoa(grupoId, pessoaId, { confirmIfLast: true, resumo });
   }
 
-  async function registrarSaidaVeiculo(grupoId, veiculoId, opts={confirmIfLast:true}) {
+  async function registrarSaidaVeiculo(grupoId, veiculoId, opts={confirmIfLast:true, forceEncerrar:false, resumo:null}) {
     try {
+      let forceEncerrar = !!opts.forceEncerrar;
+      let resumo = opts.resumo || null;
       if (opts.confirmIfLast) {
-        const resumo = await fetchResumo(grupoId);
+        resumo = resumo || await fetchResumo(grupoId);
         if (resumo) {
-          const presentesPessoas = resumo.pessoas.filter(p => !p.saida).length;
           const presentesVeiculos = resumo.veiculos.filter(v => !v.saida).length;
-          if (presentesVeiculos === 1 && presentesPessoas === 0) {
-            const confirmar = await (window.showConfirm ? window.showConfirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?', 'Último presente') : Promise.resolve(window.confirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?')));
+          if (presentesVeiculos === 1) {
+            const confirmar = await (window.showConfirm
+              ? window.showConfirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?\nSe houver pessoas todas terão sua saída registrada.', 'Último presente')
+              : Promise.resolve(window.confirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?\nSe houver pessoas todas terão sua saída registrada.')));
             if (!confirmar) return { cancelled: true };
-
-            const confirmarEncerrar = await confirmarEncerrarVisita();
-            if (!confirmarEncerrar) return { cancelled: true };
+            forceEncerrar = true;
           }
         }
       }
@@ -107,11 +125,17 @@
       }
       if (!resp.ok) return { error: 'Erro ao registrar saída' };
 
-      const resumo = await fetchResumo(grupoId);
-      window.dispatchEvent(new CustomEvent('visita:atualizada', { detail: { grupoId, resumo } }));
+      const resumoAtualizado = await fetchResumo(grupoId);
+      window.dispatchEvent(new CustomEvent('visita:atualizada', { detail: { grupoId, resumo: resumoAtualizado } }));
 
-      const pessoasDentro = resumo ? resumo.pessoas.filter(p => !p.saida).length : 0;
-      const veiculosDentro = resumo ? resumo.veiculos.filter(v => !v.saida).length : 0;
+      if (forceEncerrar) {
+        const enc = await encerrarVisita(grupoId);
+        if (!enc.ok) return { error: enc.error || 'Erro ao encerrar visita' };
+        return { encerrada: true };
+      }
+
+      const pessoasDentro = resumoAtualizado ? resumoAtualizado.pessoas.filter(p => !p.saida).length : 0;
+      const veiculosDentro = resumoAtualizado ? resumoAtualizado.veiculos.filter(v => !v.saida).length : 0;
       if (pessoasDentro === 0 && veiculosDentro === 0) {
         const enc = await encerrarVisita(grupoId);
         return { encerrada: !!enc.ok };
@@ -124,12 +148,25 @@
     }
   }
 
+
   async function confirmAndRegistrarSaidaVeiculo(grupoId, veiculoId) {
+    const resumo = await fetchResumo(grupoId);
+    if (resumo) {
+      const presentesVeiculos = resumo.veiculos.filter(v => !v.saida).length;
+      if (presentesVeiculos === 1) {
+        const confirmar = await (window.showConfirm
+          ? window.showConfirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?\nSe houver pessoas todas terão sua saída registrada.', 'Último presente')
+          : Promise.resolve(window.confirm('Este é o último veículo presente. Deseja encerrar a visita após registrar a saída?\nSe houver pessoas todas terão sua saída registrada.')));
+        if (!confirmar) return { cancelled: true };
+        return await registrarSaidaVeiculo(grupoId, veiculoId, { confirmIfLast: false, forceEncerrar: true, resumo });
+      }
+    }
     if (!(await (window.showConfirm ? window.showConfirm('Registrar saída do veículo?', 'Confirmar saída') : Promise.resolve(window.confirm('Registrar saída do veículo?'))))) {
       return { cancelled: true };
     }
-    return await registrarSaidaVeiculo(grupoId, veiculoId, { confirmIfLast: true });
+    return await registrarSaidaVeiculo(grupoId, veiculoId, { confirmIfLast: true, resumo });
   }
+
 
   async function registrarEntradaPessoa(grupoId, pessoaId) {
     try {
@@ -388,7 +425,7 @@ async function registrarSaidaPessoa(id) {
     if (r.cancelled) return;
     if (r.error) { alert(r.error); return; }
     if (r.encerrada) {
-      await (window.showAlert ? window.showAlert('Visita encerrada automaticamente (todos saíram).', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada automaticamente (todos saíram).')));
+      await (window.showAlert ? window.showAlert('Visita encerrada.', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada.')));
       bloquearInterfaceVisita();
       location.reload();
       return;
@@ -426,7 +463,7 @@ async function registrarSaidaVeiculo(id) {
     if (r.cancelled) return;
     if (r.error) { alert(r.error); return; }
     if (r.encerrada) {
-      await (window.showAlert ? window.showAlert('Visita encerrada automaticamente (todos saíram).', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada automaticamente (todos saíram).')));
+      await (window.showAlert ? window.showAlert('Visita encerrada.', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada.')));
       bloquearInterfaceVisita();
       location.reload();
       return;
@@ -451,7 +488,7 @@ async function checkAndEncerrarSeVazio(grupoId) {
     if (presentesPessoas === 0 && presentesVeiculos === 0) {
       const r = await window.visitaActions.encerrarVisita(grupoId);
       if (r.ok) {
-        await (window.showAlert ? window.showAlert('Visita encerrada automaticamente (todos saíram).', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada automaticamente (todos saíram).')));
+        await (window.showAlert ? window.showAlert('Visita encerrada.', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada.')));
         bloquearInterfaceVisita();
         location.reload();
         return;
@@ -471,7 +508,7 @@ async function checkAndEncerrarSeVazio(grupoId) {
     const presentesVeiculos = data.veiculos.filter(v => !v.saida).length;
     if (presentesPessoas === 0 && presentesVeiculos === 0) {
       const enc = await fetch(`/api/visitas/grupos/${grupoId}/encerrar/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken } });
-      if (enc.ok) { await (window.showAlert ? window.showAlert('Visita encerrada automaticamente (todos saíram).', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada automaticamente (todos saíram).'))); location.reload(); return; }
+      if (enc.ok) { await (window.showAlert ? window.showAlert('Visita encerrada.', 'Visita encerrada') : Promise.resolve(alert('Visita encerrada.'))); location.reload(); return; }
       location.reload();
     } else {
       location.reload();
@@ -515,9 +552,7 @@ window.registrarEntradaVeiculo = registrarEntradaVeiculo;
 window.handleEncerrarClick = async function() {
   const gid = window.visitaExistenteId;
   if (!gid) return;
-  const confirmar = await (window.visitaActions && typeof window.visitaActions.confirmarEncerrarVisita === 'function'
-    ? window.visitaActions.confirmarEncerrarVisita()
-    : (window.showConfirm ? window.showConfirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.', 'Encerrar visita') : Promise.resolve(window.confirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.')))));
+  const confirmar = await window.visitaActions.confirmarEncerrarVisita();
   if (!confirmar) return;
   try {
     if (window.visitaActions && typeof window.visitaActions.encerrarVisita === 'function') {

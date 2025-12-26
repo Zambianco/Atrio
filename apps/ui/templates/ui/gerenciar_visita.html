@@ -32,7 +32,7 @@
 <style>
   .linha-visita{
     display: grid;
-    grid-template-columns: 1fr 90px 160px;
+    grid-template-columns: 1fr 170px 90px 160px;
     align-items: center;
     column-gap: 12px;
   }
@@ -52,6 +52,38 @@
 
   .col-acao{
     text-align: right;
+  }
+
+  .col-datas{
+    line-height: 1.2;
+  }
+
+  @media (max-width: 768px) {
+    .linha-visita{
+      grid-template-columns: 1fr;
+      row-gap: 8px;
+    }
+
+    .col-nome{
+      order: 1;
+    }
+
+    .col-status{
+      order: 2;
+    }
+
+    .col-datas{
+      order: 3;
+    }
+
+    .col-acao{
+      order: 4;
+      text-align: left;
+    }
+
+    .status-badge{
+      width: auto;
+    }
   }
 
   /* Sticky footer para destaque do botão Encerrar */
@@ -86,6 +118,11 @@
       <p class="text-muted mb-0">
         Visita #{{ visita.id }} • {{ visita.motivo }}
       </p>
+      {% if visita.data_saida %}
+        <span class="badge bg-secondary mt-2">ENCERRADA</span>
+      {% else %}
+        <span class="badge bg-success mt-2">ABERTA</span>
+      {% endif %}
     </div>
 
     <div class="d-flex gap-2">
@@ -99,22 +136,18 @@
   <div class="card mb-4">
     <div class="card-body">
       <div class="row g-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
           <small class="text-muted">Responsável</small>
           <div class="fw-semibold">{{ visita.autorizado_por }}</div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
           <small class="text-muted">Início</small>
           <div>{{ visita.data_entrada|date:"d/m/Y H:i" }}</div>
         </div>
 
-        <div class="col-md-3">
-          <small class="text-muted">Status</small><br>
-          <span class="badge bg-success">ABERTA</span>
-        </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4">
           <small class="text-muted">Observação</small>
           <div>{{ visita.observacao|default:"—" }}</div>
         </div>
@@ -145,7 +178,12 @@
               <strong>{{ p.pessoa.nome }}</strong>
             </div>
 
-            <div>
+            <div class="col-datas text-muted small">
+              <div>Entrada: {{ p.data_entrada|date:"d/m/Y H:i" }}</div>
+              <div>Saida: {{ p.data_saida|date:"d/m/Y H:i"|default:"-" }}</div>
+            </div>
+
+            <div class="col-status">
               {% if p.data_saida %}
                 <span class="badge bg-secondary status-badge">SAIU</span>
               {% else %}
@@ -198,7 +236,12 @@
               <small class="text-muted ms-2">{{ v.veiculo.modelo }}</small>
             </div>
 
-            <div>
+            <div class="col-datas text-muted small">
+              <div>Entrada: {{ v.data_entrada|date:"d/m/Y H:i" }}</div>
+              <div>Saida: {{ v.data_saida|date:"d/m/Y H:i"|default:"-" }}</div>
+            </div>
+
+            <div class="col-status">
               {% if v.data_saida %}
                 <span class="badge bg-secondary status-badge">SAIU</span>
               {% else %}
@@ -233,7 +276,7 @@
 {% include 'ui/modal_seleciona_pessoa.html' %}
 {% include 'ui/modal_seleciona_veiculo.html' %}
 
-{% if visita.status == 'aberta' %}
+{% if not visita.data_saida %}
   <div class="container-fluid py-3">
     <div class="sticky-footer">
       <div class="inner">

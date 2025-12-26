@@ -255,9 +255,7 @@ async function registrarEntradaVeiculo(grupoId, veiculoId) {
 }
 
 async function encerrarVisita(grupoId) {
-  if (!(await (window.visitaActions && typeof window.visitaActions.confirmarEncerrarVisita === 'function'
-    ? window.visitaActions.confirmarEncerrarVisita()
-    : (window.showConfirm ? window.showConfirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.', 'Encerrar visita') : Promise.resolve(window.confirm('Tem certeza que deseja encerrar esta visita? Todas as pessoas e veículos serão marcados como fora.')))))) {
+  if (!(await window.confirmarEncerrarVisita())) {
     return;
   }
 
