@@ -30,7 +30,7 @@ def _validar_veiculo_nao_em_visita(veiculo_id):
 
 
 @transaction.atomic
-def registrar_visita(motivo, autorizado_por, observacao, pessoas_ids, veiculos_ids):
+def registrar_visita(motivo, autorizado_por, observacao, pessoas_ids, veiculos_ids, criado_por=None):
     if not pessoas_ids:
         raise ValidationError("Informe ao menos uma pessoa")
 
@@ -40,7 +40,8 @@ def registrar_visita(motivo, autorizado_por, observacao, pessoas_ids, veiculos_i
         motivo=motivo,
         autorizado_por=autorizado_por,
         observacao=observacao,
-        data_entrada=agora
+        data_entrada=agora,
+        criado_por=criado_por
     )
 
     for pid in pessoas_ids:

@@ -88,6 +88,7 @@ class RegistrarVisitaAPIView(APIView):
                 observacao=request.data.get("observacao"),
                 pessoas_ids=request.data.get("pessoas", []),
                 veiculos_ids=request.data.get("veiculos", []),
+                criado_por=request.user,
             )
         except ValidationError as e:
             return Response({"erro": e.message}, status=400)
@@ -137,6 +138,7 @@ class GrupoResumoAPIView(APIView):
                 "motivo": grupo.motivo,
                 "autorizado_por": grupo.autorizado_por,
                 "observacao": grupo.observacao,
+                "criado_por_username": grupo.criado_por.username if grupo.criado_por else None,
             },
             "pessoas": [
                 {

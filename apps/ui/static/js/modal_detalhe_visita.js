@@ -117,7 +117,7 @@ async function abrirModal(id) {
       <div class="resumo-card">
         <div class="resumo-item"><span class="resumo-label">ID:</span><span>#${v.id}</span></div>
         <div class="resumo-item"><span class="resumo-label">Motivo:</span><span>${v.motivo}</span></div>
-        <div class="resumo-item"><span class="resumo-label">Respons\u00e1vel:</span><span>${v.autorizado_por}</span></div>
+        <div class="resumo-item"><span class="resumo-label">Contato:</span><span>${v.autorizado_por}</span></div>
         <div class="resumo-item"><span class="resumo-label">Status:</span>
           <span class="badge ${v.status === 'aberta' ? 'bg-success' : 'bg-danger'}">${v.status.toUpperCase()}</span>
         </div>
@@ -322,3 +322,5 @@ async function recarregarListaEReabrir() {
 // Expor encerrarVisita globalmente para templates e outras p\u00e1ginas
 try { window.encerrarVisita = encerrarVisita; } catch (e) {}
 try { window.abrirModal = abrirModal; } catch (e) {}
+
+

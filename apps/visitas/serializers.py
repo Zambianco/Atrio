@@ -4,6 +4,8 @@ from rest_framework import serializers
 from .models import GrupoVisita, VisitaPessoa, VisitaVeiculo
 
 class GrupoVisitaSerializer(serializers.ModelSerializer):
+    criado_por_username = serializers.CharField(source="criado_por.username", read_only=True)
+
     class Meta:
         model = GrupoVisita
         fields = "__all__"

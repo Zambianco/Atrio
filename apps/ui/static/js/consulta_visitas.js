@@ -142,6 +142,7 @@ function aplicarFiltros() {
     filtradas = filtradas.filter(v =>
       (v.motivo && v.motivo.toLowerCase().includes(texto)) ||
       (v.responsavel && v.responsavel.toLowerCase().includes(texto)) ||
+      (v.usuario && v.usuario.toLowerCase().includes(texto)) ||
       (v.autorizado_por && v.autorizado_por.toLowerCase().includes(texto)) ||
       (v.pessoas && v.pessoas.some(p => p.nome && p.nome.toLowerCase().includes(texto))) ||
       (v.veiculos && v.veiculos.some(ve => ve.placa && ve.placa.toLowerCase().includes(texto)))
@@ -235,8 +236,8 @@ function renderizarLista() {
       <div class="card-body-custom">
         <div class="row">
           <div class="col-md-6">
-            <p class="mb-1"><strong>Responsavel:</strong> ${visita.responsavel || '-'}</p>
-            <p class="mb-1"><strong>Autorizado por:</strong> ${visita.autorizado_por || '-'}</p>
+            <p class="mb-1"><strong>Contato:</strong> ${visita.autorizado_por || '-'}</p>
+            <p class="mb-1"><strong>Usuario:</strong> ${visita.usuario || '-'}</p>
             <p class="mb-1"><strong>Entrada:</strong> ${formatarDataHora(visita.data_entrada)}</p>
             <p class="mb-1"><strong>Saida:</strong> ${formatarDataHora(visita.data_saida)}</p>
           </div>
@@ -356,7 +357,7 @@ function exportarVisitasCSV() {
   const header = [
     'id',
     'motivo_destino',
-    'responsavel',
+    'contato',
     'usuario',
     'data_entrada',
     'data_saida',
@@ -370,7 +371,7 @@ function exportarVisitasCSV() {
       v.id,
       v.motivo || '',
       v.autorizado_por || '',
-      v.responsavel || '',
+      v.usuario || '',
       v.data_entrada || '',
       v.data_saida || '',
       v.status || ''
@@ -472,6 +473,7 @@ async function carregarVisitas() {
         motivo: g.motivo,
         autorizado_por: g.autorizado_por,
         responsavel: g.responsavel,
+        usuario: g.criado_por_username || '',
         observacao: g.observacao,
         data_entrada: g.data_entrada,
         data_saida: g.data_saida,
@@ -510,6 +512,7 @@ async function carregarVisitas() {
             motivo: g.motivo,
             autorizado_por: g.autorizado_por,
             responsavel: g.responsavel,
+            usuario: g.criado_por_username || '',
             observacao: g.observacao,
             data_entrada: g.data_entrada,
             data_saida: g.data_saida,
@@ -524,6 +527,7 @@ async function carregarVisitas() {
           motivo: resumo.grupo.motivo,
           autorizado_por: resumo.grupo.autorizado_por,
           responsavel: resumo.grupo.responsavel,
+          usuario: resumo.grupo.criado_por_username || '',
           observacao: resumo.grupo.observacao,
           data_entrada: resumo.grupo.data_entrada,
           data_saida: resumo.grupo.data_saida,

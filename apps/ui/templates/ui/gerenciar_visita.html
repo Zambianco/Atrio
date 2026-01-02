@@ -116,7 +116,7 @@
         <i class="bi bi-gear me-2"></i>Gerenciar Visita
       </h2>
       <p class="text-muted mb-0">
-        Visita #{{ visita.id }} • {{ visita.motivo }}
+        Visita #{{ visita.id }}
       </p>
       {% if visita.data_saida %}
         <span class="badge bg-secondary mt-2">ENCERRADA</span>
@@ -137,7 +137,7 @@
     <div class="card-body">
       <div class="row g-3">
         <div class="col-md-4">
-          <small class="text-muted">Responsável</small>
+          <small class="text-muted">Contato</small>
           <div class="fw-semibold">{{ visita.autorizado_por }}</div>
         </div>
 
@@ -148,8 +148,8 @@
 
 
         <div class="col-md-4">
-          <small class="text-muted">Observação</small>
-          <div>{{ visita.observacao|default:"—" }}</div>
+          <small class="text-muted">Motivo</small>
+          <div>{{ visita.motivo|default:"-" }}</div>
         </div>
       </div>
     </div>
@@ -270,6 +270,19 @@
 
   </div>
 
+  <!-- Observacao -->
+  <div class="card mt-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <small class="text-muted">Observacao</small>
+        <button class="btn btn-sm btn-outline-primary" id="btnSalvarObservacao">
+          Salvar observacao
+        </button>
+      </div>
+      <textarea id="observacaoInput" class="form-control" rows="4">{{ visita.observacao|default:"" }}</textarea>
+    </div>
+  </div>
+
 </div>
 
 <!-- Modais reutilizáveis para busca (pessoa / veículo) -->
@@ -318,4 +331,48 @@
   })();
 </script>
 
+<script>
+  (function() {
+    const btnSalvar = document.getElementById('btnSalvarObservacao');
+    const input = document.getElementById('observacaoInput');
+    if (!btnSalvar || !input) return;
+
+    btnSalvar.addEventListener('click', async function() {
+      const payload = { observacao: input.value };
+      btnSalvar.disabled = true;
+
+      try {
+        if (window.apiRequest) {
+          await window.apiRequest(`/api/visitas/grupos/{{ visita.id }}/`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload)
+          });
+        } else {
+          const resp = await fetch(`/api/visitas/grupos/{{ visita.id }}/`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': (typeof getCSRFToken === 'function') ? getCSRFToken() : ''
+            },
+            body: JSON.stringify(payload)
+          });
+          if (!resp.ok) throw new Error('Falha ao salvar observacao');
+        }
+
+        if (window.showAlert) {
+          await window.showAlert('Observacao atualizada.', 'Sucesso');
+        }
+      } catch (e) {
+        console.error(e);
+        if (window.showAlert) {
+          await window.showAlert('Nao foi possivel salvar a observacao.', 'Erro');
+        }
+      } finally {
+        btnSalvar.disabled = false;
+      }
+    });
+  })();
+</script>
+
 {% endblock %}
+

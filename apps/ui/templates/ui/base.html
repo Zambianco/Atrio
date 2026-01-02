@@ -56,6 +56,12 @@
           </a>
         </li>
         <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'visitas' %}active{% endif %}" 
+             href="{% url 'ui:visitas' %}">
+            <i class="bi bi-search me-1"></i>Consulta de Visitas
+          </a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'cadastro_pessoa' %}active{% endif %}" 
              href="{% url 'ui:cadastro_pessoa' %}">
             <i class="bi bi-person-plus me-1"></i>Cadastro Pessoa
