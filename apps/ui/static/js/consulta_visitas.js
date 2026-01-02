@@ -355,27 +355,40 @@ function exportarVisitasCSV() {
 
   const header = [
     'id',
-    'motivo',
-    'autorizado_por',
+    'motivo_destino',
     'responsavel',
+    'usuario',
     'data_entrada',
     'data_saida',
     'status',
-    'pessoas',
-    'veiculos'
+    'membros'
   ];
 
-  const rows = data.map(v => ([
-    v.id,
-    v.motivo || '',
-    v.autorizado_por || '',
-    v.responsavel || '',
-    v.data_entrada || '',
-    v.data_saida || '',
-    v.status || '',
-    v.pessoas.map(p => p.nome).join('; '),
-    v.veiculos.map(ve => ve.placa).join('; ')
-  ]));
+  const rows = [];
+  data.forEach(v => {
+    const base = [
+      v.id,
+      v.motivo || '',
+      v.autorizado_por || '',
+      v.responsavel || '',
+      v.data_entrada || '',
+      v.data_saida || '',
+      v.status || ''
+    ];
+
+    const pessoas = (v.pessoas || []).map(p => `Pessoa#${p.id} ${p.nome || ''}`.trim());
+    const veiculos = (v.veiculos || []).map(ve => `Veiculo#${ve.id} ${ve.placa || ''}`.trim());
+    const membros = [...pessoas, ...veiculos];
+
+    if (!membros.length) {
+      rows.push([...base, '']);
+      return;
+    }
+
+    membros.forEach(membro => {
+      rows.push([...base, membro]);
+    });
+  });
 
   const csv = [header, ...rows]
     .map(cols => cols.map(col => {
