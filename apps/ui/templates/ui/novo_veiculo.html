@@ -1,24 +1,396 @@
+<!-- novo_veiculo.html -->
 {% extends "ui/base.html" %}
 {% load static %}
 
-{% block title %}Novo Veículo{% endblock %}
+{% block title %}Cadastrar Veículo - ABN Portaria{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Cadastrar Veículo</h2>
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      
+      <!-- Cabeçalho -->
+      <div class="text-center mb-4">
+        <h2 class="fw-bold text-warning">
+          <i class="bi bi-truck-front-fill me-2"></i>Cadastrar Veículo
+        </h2>
+        <p class="text-muted">Preencha os dados do veículo para evitar duplicidades</p>
+      </div>
 
-<div class="mb-3">
-  <label class="form-label">Placa</label>
-  <input id="placaVeiculo" class="form-control">
+      <!-- Card Principal -->
+      <div class="card mb-4">
+        <div class="card-header bg-warning text-dark">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-info-circle me-2"></i>Informações do Veículo
+          </h5>
+        </div>
+        
+        <div class="card-body">
+          
+          <!-- Seção de Busca para Edição -->
+          <div class="accordion mb-4" id="accordionBusca">
+            <div class="accordion-item border rounded">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBusca">
+                  <i class="bi bi-search me-2"></i>
+                  Buscar veículo para editar
+                </button>
+              </h2>
+              <div id="collapseBusca" class="accordion-collapse collapse" data-bs-parent="#accordionBusca">
+                <div class="accordion-body">
+                  <div class="input-group">
+                    <input id="buscaVeiculoEdicao" 
+                           class="form-control" 
+                           placeholder="Digite placa ou modelo...">
+                    <button id="btnBuscarVeiculoEdicao" 
+                            class="btn btn-outline-warning" 
+                            type="button">
+                      <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                  </div>
+                  <div id="listaVeiculoEdicao" 
+                       class="list-group mt-2" 
+                       style="max-height: 200px; overflow-y: auto;"></div>
+                  <div id="veiculoEditando" 
+                       class="alert alert-warning mt-3 py-2 d-none">
+                    <i class="bi bi-pencil me-2"></i>
+                    <span class="mensagem-editando"></span>
+                    <button type="button" 
+                            class="btn-close btn-sm float-end" 
+                            onclick="limparEdicaoVeiculo()"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulário Principal -->
+          <form id="formVeiculo" novalidate>
+            <div class="row g-3">
+              
+              <!-- Placa -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Placa <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-hash"></i>
+                  </span>
+                  <input id="placaVeiculo" 
+                         class="form-control text-uppercase" 
+                         maxlength="7" 
+                         placeholder="ABC1234" 
+                         pattern="[A-Za-z]{3}[0-9]{1}[A-Za-z0-9]{1}[0-9]{2}|[A-Za-z]{3}[0-9]{4}"
+                         required>
+                  <span class="input-group-text">
+                    <i class="bi bi-arrow-clockwise" id="placaFormatIcon"></i>
+                  </span>
+                </div>
+                <div class="valid-feedback d-none" id="placaValida">
+                  <i class="bi bi-check-circle me-1"></i>Placa válida
+                </div>
+                <div class="invalid-feedback" id="placaInvalida">
+                  Informe uma placa válida (ex: ABC1D23 ou ABC1234)
+                </div>
+                <div id="placaExiste" class="alert alert-danger py-2 mt-2 d-none">
+                  <i class="bi bi-exclamation-triangle me-2"></i>
+                  Placa já cadastrada no sistema
+                </div>
+                <div class="form-text text-muted">
+                  <i class="bi bi-info-circle me-1"></i>
+                  Somente letras e números. O sistema formata automaticamente.
+                </div>
+              </div>
+
+              <!-- Empresa -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Empresa
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-building"></i>
+                  </span>
+                  <input id="empresaVeiculo" 
+                         class="form-control" 
+                         maxlength="200" 
+                         placeholder="Nome da empresa">
+                </div>
+              </div>
+
+              <!-- Modelo -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Modelo <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-car-front"></i>
+                  </span>
+                  <input id="modeloVeiculo" 
+                         class="form-control" 
+                         maxlength="100" 
+                         placeholder="Ex: Fiesta, Gol, Civic..." 
+                         required>
+                </div>
+                <div class="invalid-feedback">
+                  Informe o modelo do veículo.
+                </div>
+              </div>
+
+              <!-- Cor -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Cor
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-palette"></i>
+                  </span>
+                  <select id="corVeiculo" class="form-select">
+                    <option value="" selected>Selecione a cor...</option>
+                    <option value="Preto">Preto</option>
+                    <option value="Branco">Branco</option>
+                    <option value="Vermelho">Vermelho</option>
+                    <option value="Azul">Azul</option>
+                    <option value="Prata ou Cinza">Prata ou Cinza</option>
+                    <option value="Verde">Verde</option>
+                    <option value="Amarelo">Amarelo</option>
+                    <option value="Marrom">Marrom</option>
+                    <option value="Bege">Bege</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Tipo -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Tipo de Veículo
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-truck"></i>
+                  </span>
+                  <select id="tipoVeiculo" class="form-select">
+                    <option value="" selected>Selecione o tipo...</option>
+                    <option value="Automóvel">Automóvel (carros, sedans, hatch, SUV)</option>
+                    <option value="Caminhonete">Caminhonete</option>
+                    <option value="Caminhão">Caminhão</option>
+                    <option value="Micro-ônibus">Micro-ônibus</option>
+                    <option value="Ônibus">Ônibus</option>
+                    <option value="Motocicleta">Motocicleta / Motoneta</option>
+                    <option value="Trator">Trator</option>
+                    <option value="Reboque">Reboque / Semirreboque</option>
+                    <option value="Especial">Especial (guincho, ambulância, etc.)</option>
+                  </select>
+                </div>
+              </div>
+
+
+              <!-- Observações -->
+              <div class="col-12">
+                <label class="form-label fw-semibold">
+                  Observações
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-card-text"></i>
+                  </span>
+                  <textarea id="observacaoVeiculo" 
+                            class="form-control" 
+                            rows="3" 
+                            placeholder="Informações adicionais sobre o veículo..."></textarea>
+                </div>
+              </div>
+
+              <!-- Data de Criação -->
+              <div class="col-12">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-calendar-plus me-1"></i>
+                  Data de Cadastro
+                </label>
+                <input id="criadoEmVeiculo" 
+                       class="form-control bg-light" 
+                       value="Data atual" 
+                       disabled>
+              </div>
+
+            </div>
+          </form>
+        </div>
+        
+        <!-- Rodapé com Botões -->
+        <div class="card-footer bg-white border-top">
+          <div class="row align-items-center">
+            <div class="col-md-6 mb-2 mb-md-0">
+              <span class="text-muted">
+                <span class="text-danger">*</span> Campos obrigatórios
+              </span>
+            </div>
+            <div class="col-md-6 text-end">
+              <div class="d-flex gap-2 justify-content-end">
+                <button id="btnLimparVeiculo" 
+                        class="btn btn-outline-secondary">
+                  <i class="bi bi-eraser me-1"></i>Limpar
+                </button>
+                <button id="btnSalvarVeiculo" 
+                        class="btn btn-warning px-4">
+                  <i class="bi bi-save me-1"></i>Salvar Veículo
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
-
-<div class="mb-3">
-  <label class="form-label">Empresa</label>
-  <input id="empresaVeiculo" class="form-control">
-</div>
-
-<button id="btnSalvarVeiculo" class="btn btn-warning">Salvar</button>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/novo_veiculo.js' %}"></script>
+
+<style>
+.accordion-button:not(.collapsed) {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: var(--warning-color);
+  border-bottom: 1px solid rgba(255, 193, 7, 0.1);
+}
+
+.accordion-body {
+  background-color: rgba(0,0,0,0.01);
+}
+
+.color-preview {
+  transition: transform 0.2s ease;
+}
+
+.color-preview:hover {
+  transform: scale(1.1);
+}
+
+/* Validação */
+.form-control:valid, 
+.form-select:valid {
+  border-color: var(--success-color);
+}
+
+.form-control:invalid:focus, 
+.form-select:invalid:focus {
+  border-color: var(--danger-color);
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Scrollbar personalizada */
+#listaVeiculoEdicao::-webkit-scrollbar {
+  width: 6px;
+}
+
+#listaVeiculoEdicao::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+#listaVeiculoEdicao::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+#listaVeiculoEdicao::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+</style>
+
+<script>
+// Mapa de cores para preview
+const coresMap = {
+  'Preto': '#000000',
+  'Branco': '#ffffff',
+  'Vermelho': '#dc3545',
+  'Azul': '#0d6efd',
+  'Prata ou Cinza': '#6c757d',
+  'Verde': '#198754',
+  'Amarelo': '#ffc107',
+  'Marrom': '#8B4513',
+  'Bege': '#F5F5DC',
+  'Outro': '#6f42c1'
+};
+
+// Atualizar preview da cor
+document.getElementById('corVeiculo').addEventListener('change', function(e) {
+  const preview = document.querySelector('.color-preview');
+  const text = document.getElementById('corSelecionadaText');
+  const corSelecionada = e.target.value;
+  
+  if (corSelecionada && coresMap[corSelecionada]) {
+    preview.style.backgroundColor = coresMap[corSelecionada];
+    text.textContent = corSelecionada;
+    text.className = 'fw-medium';
+  } else if (corSelecionada) {
+    preview.style.backgroundColor = '#6f42c1';
+    text.textContent = corSelecionada;
+    text.className = 'fw-medium';
+  } else {
+    preview.style.backgroundColor = '#f8f9fa';
+    text.textContent = 'Nenhuma cor selecionada';
+    text.className = 'text-muted';
+  }
+});
+
+// Formatar placa em tempo real
+document.getElementById('placaVeiculo').addEventListener('input', function(e) {
+  let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  
+  if (value.length > 7) {
+    value = value.substring(0, 7);
+  }
+  
+  // Formatar visualmente (ex: ABC-1D23 ou ABC1234)
+  if (value.length > 3) {
+    e.target.value = value.substring(0, 3) + '-' + value.substring(3);
+  } else {
+    e.target.value = value;
+  }
+  
+  // Validar formato
+  const pattern = /^[A-Z]{3}-?[0-9][A-Z0-9][0-9]{2}$|^[A-Z]{3}-?[0-9]{4}$/;
+  const isValid = pattern.test(e.target.value.replace('-', ''));
+  
+  const validaEl = document.getElementById('placaValida');
+  const invalidaEl = document.getElementById('placaInvalida');
+  
+  if (isValid && e.target.value.length >= 7) {
+    e.target.classList.remove('is-invalid');
+    e.target.classList.add('is-valid');
+    validaEl.classList.remove('d-none');
+    invalidaEl.classList.add('d-none');
+  } else if (e.target.value.length > 0) {
+    e.target.classList.add('is-invalid');
+    e.target.classList.remove('is-valid');
+    validaEl.classList.add('d-none');
+    invalidaEl.classList.remove('d-none');
+  } else {
+    e.target.classList.remove('is-invalid', 'is-valid');
+    validaEl.classList.add('d-none');
+    invalidaEl.classList.remove('d-none');
+  }
+});
+
+function limparEdicaoVeiculo() {
+  document.getElementById('veiculoEditando').classList.add('d-none');
+  document.getElementById('formVeiculo').reset();
+  
+  const preview = document.querySelector('.color-preview');
+  const text = document.getElementById('corSelecionadaText');
+  preview.style.backgroundColor = '#f8f9fa';
+  text.textContent = 'Nenhuma cor selecionada';
+  text.className = 'text-muted';
+  
+  document.getElementById('placaVeiculo').classList.remove('is-invalid', 'is-valid');
+  document.getElementById('placaExiste').classList.add('d-none');
+}
+</script>
 {% endblock %}

@@ -1,24 +1,350 @@
+<!-- nova_pessoa.html -->
 {% extends "ui/base.html" %}
 {% load static %}
 
-{% block title %}Nova Pessoa{% endblock %}
+{% block title %}Cadastrar Pessoa - ABN Portaria{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Cadastrar Pessoa</h2>
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      
+      <!-- Cabeçalho -->
+      <div class="text-center mb-4">
+        <h2 class="fw-bold text-primary">
+          <i class="bi bi-person-plus-fill me-2"></i>Cadastrar Pessoa
+        </h2>
+        <p class="text-muted">Preencha os campos para cadastrar uma nova pessoa</p>
+      </div>
 
-<div class="mb-3">
-  <label class="form-label">Nome</label>
-  <input id="nomePessoa" class="form-control">
+      <!-- Card Principal -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-info-circle me-2"></i>Informações da Pessoa
+          </h5>
+        </div>
+        
+        <div class="card-body">
+          
+          <!-- Seção de Busca para Edição -->
+          <div class="accordion mb-4" id="accordionBusca">
+            <div class="accordion-item border rounded">
+              <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBusca">
+                  <i class="bi bi-search me-2"></i>
+                  Buscar pessoa para editar
+                </button>
+              </h2>
+              <div id="collapseBusca" class="accordion-collapse collapse" data-bs-parent="#accordionBusca">
+                <div class="accordion-body">
+                  <div class="input-group">
+                    <input id="buscaPessoaEdicao" 
+                           class="form-control" 
+                           placeholder="Digite nome ou empresa...">
+                    <button id="btnBuscarPessoaEdicao" 
+                            class="btn btn-outline-primary" 
+                            type="button">
+                      <i class="bi bi-search me-1"></i>Buscar
+                    </button>
+                  </div>
+                  <div id="listaPessoaEdicao" 
+                       class="list-group mt-2" 
+                       style="max-height: 200px; overflow-y: auto;"></div>
+                  <div id="pessoaEditando" 
+                       class="alert alert-info mt-3 py-2 d-none">
+                    <i class="bi bi-pencil me-2"></i>
+                    <span class="mensagem-editando"></span>
+                    <button type="button" 
+                            class="btn-close btn-sm float-end" 
+                            onclick="limparEdicao()"></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulário Principal -->
+          <form id="formPessoa" novalidate>
+            <div class="row g-3">
+              
+              <!-- Nome -->
+              <div class="col-12">
+                <label class="form-label fw-semibold">
+                  Nome Completo <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-person"></i>
+                  </span>
+                  <input id="nomePessoa" 
+                         class="form-control" 
+                         maxlength="200" 
+                         autocomplete="name" 
+                         required 
+                         placeholder="Nome completo da pessoa">
+                </div>
+                <div class="invalid-feedback">
+                  Por favor, informe o nome completo.
+                </div>
+              </div>
+
+              <!-- Empresa -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Empresa
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-building"></i>
+                  </span>
+                  <input id="empresaPessoa" 
+                         class="form-control" 
+                         maxlength="200" 
+                         autocomplete="organization"
+                         placeholder="Nome da empresa">
+                </div>
+              </div>
+
+              <!-- Tipo -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">
+                  Tipo <span class="text-danger">*</span>
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-tag"></i>
+                  </span>
+                  <select id="tipoPessoa" class="form-select" required>
+                    <option value="" selected disabled>Selecione um tipo...</option>
+                    <option value="visitante">Visitante</option>
+                    <option value="funcionario">Funcionário</option>
+                    <option value="motorista">Motorista</option>
+                    <option value="fornecedor">Fornecedor</option>
+                    <option value="prestador">Prestador de Serviço</option>
+                  </select>
+                </div>
+                <div class="invalid-feedback">
+                  Por favor, selecione um tipo.
+                </div>
+              </div>
+
+              <!-- Observações -->
+              <div class="col-12">
+                <label class="form-label fw-semibold">
+                  Observações
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-card-text"></i>
+                  </span>
+                  <textarea id="observacaoPessoa" 
+                            class="form-control" 
+                            rows="3" 
+                            placeholder="Informações adicionais sobre a pessoa..."></textarea>
+                </div>
+              </div>
+
+              <!-- Documentos (Seção separada) -->
+              <div class="col-12 mt-4">
+                <div class="border-top pt-3">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                      <h5 class="fw-bold mb-1">
+                        <i class="bi bi-file-earmark-text me-2 text-primary"></i>
+                        Documentos
+                      </h5>
+                      <p class="text-muted mb-0">Adicione os documentos da pessoa</p>
+                    </div>
+                    <button id="btnAdicionarDocumento" 
+                            type="button" 
+                            class="btn btn-primary">
+                      <i class="bi bi-plus-circle me-1"></i>Adicionar Documento
+                    </button>
+                  </div>
+                  
+                  <div id="documentosContainer" class="documentos-container">
+                    <!-- Documentos serão inseridos aqui -->
+                    <div class="text-center py-5 border rounded bg-light" id="nenhumDocumento">
+                      <i class="bi bi-file-earmark-text display-6 text-muted mb-3"></i>
+                      <p class="text-muted">Nenhum documento adicionado</p>
+                    </div>
+                  </div>
+                  
+                  <div class="form-text text-muted mt-2">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Você pode adicionar múltiplos documentos (RG, CNH, Carteira de Trabalho, etc.)
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data de Criação (somente leitura) -->
+              <div class="col-12">
+                <label class="form-label fw-semibold">
+                  <i class="bi bi-calendar-plus me-1"></i>
+                  Data de Cadastro
+                </label>
+                <input id="criadoEmPessoa" 
+                       class="form-control bg-light" 
+                       value="Data atual" 
+                       disabled>
+              </div>
+
+            </div>
+          </form>
+        </div>
+        
+        <!-- Rodapé com Botões -->
+        <div class="card-footer bg-white border-top">
+          <div class="row align-items-center">
+            <div class="col-md-6 mb-2 mb-md-0">
+              <span class="text-muted">
+                <span class="text-danger">*</span> Campos obrigatórios
+              </span>
+            </div>
+            <div class="col-md-6 text-end">
+              <div class="d-flex gap-2 justify-content-end">
+                <button id="btnLimparPessoa" 
+                        class="btn btn-outline-secondary">
+                  <i class="bi bi-eraser me-1"></i>Limpar
+                </button>
+                <button id="btnSalvarPessoa" 
+                        class="btn btn-success px-4">
+                  <i class="bi bi-save me-1"></i>Salvar Cadastro
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
-
-<div class="mb-3">
-  <label class="form-label">Empresa</label>
-  <input id="empresaPessoa" class="form-control">
-</div>
-
-<button id="btnSalvarPessoa" class="btn btn-success">Salvar</button>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/nova_pessoa.js' %}"></script>
+
+<!-- Template para documentos -->
+<template id="documentoTemplate">
+  <div class="card border mb-3 documento-row">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+      <span class="fw-semibold">
+        <i class="bi bi-file-earmark me-1"></i>
+        Documento <span class="contador-documento"></span>
+      </span>
+      <button type="button" class="btn btn-sm btn-outline-danger remover-documento">
+        <i class="bi bi-trash me-1"></i>Remover
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">
+            Tipo do documento <span class="text-danger">*</span>
+          </label>
+          <select class="form-select tipo-documento" required>
+            <option value="" selected disabled>Selecione o tipo...</option>
+            <option value="RG">RG</option>
+            <option value="CPF">CPF</option>
+            <option value="CNH">CNH</option>
+            <option value="CTPS">Carteira de Trabalho</option>
+            <option value="PASSAPORTE">Passaporte</option>
+            <option value="OUTRO">Outro</option>
+          </select>
+          <div class="invalid-feedback">Selecione o tipo do documento.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">
+            Número <span class="text-danger">*</span>
+          </label>
+          <input class="form-control numero-documento" maxlength="100" required>
+          <div class="invalid-feedback">Informe o número do documento.</div>
+          <div class="form-text documento-existe text-danger d-none">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            Já existe documento com este número.
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">
+            Órgão Emissor
+          </label>
+          <input class="form-control emissor-documento" maxlength="100">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold">
+            Validade
+          </label>
+          <input type="date" class="form-control validade-documento">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold">
+            Observações do documento
+          </label>
+          <textarea class="form-control observacao-documento" 
+                    rows="2" 
+                    placeholder="Observações específicas deste documento..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style>
+.documento-row {
+  transition: all 0.2s ease;
+}
+
+.documento-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: var(--primary-color);
+  border-bottom: 1px solid rgba(13, 110, 253, 0.1);
+}
+
+.accordion-body {
+  background-color: rgba(0,0,0,0.01);
+}
+
+/* Melhorias de validação */
+.form-control:valid, 
+.form-select:valid {
+  border-color: var(--success-color);
+}
+
+.form-control:invalid:focus, 
+.form-select:invalid:focus {
+  border-color: var(--danger-color);
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+/* Scrollbar personalizada */
+#listaPessoaEdicao::-webkit-scrollbar {
+  width: 6px;
+}
+
+#listaPessoaEdicao::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+#listaPessoaEdicao::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+#listaPessoaEdicao::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Animação suave para documentos */
+.documentos-container {
+  transition: all 0.3s ease;
+}
+</style>
 {% endblock %}

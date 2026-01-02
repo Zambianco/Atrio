@@ -37,10 +37,10 @@ def entrada(request):
 
 
 @login_required
-def nova_pessoa(request):
+def cadastro_pessoa(request):
     return render(request, "ui/nova_pessoa.html")
 
 
 @login_required
-def novo_veiculo(request):
+def cadastro_veiculo(request):
     return render(request, "ui/novo_veiculo.html")

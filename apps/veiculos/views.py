@@ -1,5 +1,6 @@
 # apps/veiculos/views.py
 
+import re
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -27,3 +28,32 @@ class VeiculoViewSet(ModelViewSet):
         
         serializer = self.get_serializer(veiculos, many=True)
         return Response({'veiculos': serializer.data})
+
+    @action(detail=False, methods=["get"], url_path="existe")
+    def existe(self, request):
+        placa = (request.query_params.get("placa") or "").strip()
+        exclude_id = (request.query_params.get("exclude_id") or "").strip()
+        if not placa:
+            return Response({"exists": False})
+
+        normalized = re.sub(r"[^A-Z0-9]", "", placa.upper())
+        if not normalized:
+            return Response({"exists": False})
+
+        prefix = normalized[:3]
+        suffix = normalized[-4:] if len(normalized) >= 4 else normalized
+
+        queryset = self.get_queryset()
+        if exclude_id:
+            queryset = queryset.exclude(id=exclude_id)
+        if prefix:
+            queryset = queryset.filter(placa__istartswith=prefix)
+        if suffix:
+            queryset = queryset.filter(placa__iendswith=suffix)
+
+        exists = any(
+            re.sub(r"[^A-Z0-9]", "", (item.placa or "").upper()) == normalized
+            for item in queryset.only("placa")
+        )
+
+        return Response({"exists": exists})
