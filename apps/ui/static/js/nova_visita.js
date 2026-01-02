@@ -17,9 +17,11 @@ function salvarDraft() {
   try {
     const motivoEl = document.getElementById('motivo');
     const responsavelEl = document.getElementById('responsavel');
+    const observacaoEl = document.getElementById('observacao');
     const draft = {
       motivo: motivoEl ? motivoEl.value : '',
       responsavel: responsavelEl ? responsavelEl.value : '',
+      observacao: observacaoEl ? observacaoEl.value : '',
       pessoas: pessoasAdicionadas || [],
       veiculos: veiculosAdicionados || [],
       grupoVisita: !!grupoVisita,
@@ -40,9 +42,11 @@ function carregarDraft() {
 
     const motivoEl = document.getElementById('motivo');
     const responsavelEl = document.getElementById('responsavel');
+    const observacaoEl = document.getElementById('observacao');
 
     if (motivoEl && draft.motivo) motivoEl.value = draft.motivo;
     if (responsavelEl && draft.responsavel) responsavelEl.value = draft.responsavel;
+    if (observacaoEl && draft.observacao) observacaoEl.value = draft.observacao;
 
     pessoasAdicionadas = draft.pessoas || [];
     veiculosAdicionados = draft.veiculos || [];
@@ -408,7 +412,9 @@ function criarVisitaLocal() {
   }
 
   const acoesDiv = document.getElementById("acoes");
+  const cardObservacoes = document.getElementById("cardObservacoes");
   if (acoesDiv) acoesDiv.classList.remove("d-none");
+  if (cardObservacoes) cardObservacoes.classList.remove("d-none");
 
   motivoInput.disabled = true;
   responsavelInput.disabled = true;
@@ -442,8 +448,10 @@ async function cancelarVisita() {
     const acoesDiv = document.getElementById("acoes");
     const cardPessoas = document.getElementById("cardPessoas");
     const cardVeiculos = document.getElementById("cardVeiculos");
+    const cardObservacoes = document.getElementById("cardObservacoes");
     const motivoInput = document.getElementById("motivo");
     const responsavelInput = document.getElementById("responsavel");
+    const observacaoInput = document.getElementById("observacao");
     const btnCriar = document.getElementById("btnCriarCancelar");
     const btnRegistrar = document.getElementById("btnRegistrar");
     
@@ -451,6 +459,7 @@ async function cancelarVisita() {
     if (acoesDiv) acoesDiv.classList.add("d-none");
     if (cardPessoas) cardPessoas.classList.add("d-none");
     if (cardVeiculos) cardVeiculos.classList.add("d-none");
+    if (cardObservacoes) cardObservacoes.classList.add("d-none");
 
     if (motivoInput) motivoInput.disabled = false;
     if (responsavelInput) responsavelInput.disabled = false;
@@ -465,6 +474,7 @@ async function cancelarVisita() {
     // Limpar valores dos inputs básicos
     if (motivoInput) motivoInput.value = '';
     if (responsavelInput) responsavelInput.value = '';
+    if (observacaoInput) observacaoInput.value = '';
 
     // Fechar e limpar modais/buscas se existirem
     const buscaPessoaInput = document.getElementById('buscaPessoaInput');
@@ -502,6 +512,7 @@ async function registrarVisita() {
   const btnRegistrar = document.getElementById("btnRegistrar");
   const motivoInput = document.getElementById("motivo");
   const responsavelInput = document.getElementById("responsavel");
+  const observacaoInput = document.getElementById("observacao");
   
   if (pessoasAdicionadas.length === 0) {
     alert("Adicione pelo menos uma pessoa antes de registrar");
@@ -520,6 +531,7 @@ async function registrarVisita() {
   try {
     const motivo = motivoInput ? motivoInput.value.trim() : '';
     const autorizado = responsavelInput ? responsavelInput.value.trim() : '';
+    const observacao = observacaoInput ? observacaoInput.value.trim() : '';
     const pessoasIds = pessoasAdicionadas.map(p => p.id);
     const veiculosIds = veiculosAdicionados.map(v => v.id);
 
@@ -533,7 +545,7 @@ async function registrarVisita() {
       body: JSON.stringify({
         motivo: motivo,
         autorizado_por: autorizado,
-        observacao: "",
+        observacao: observacao,
         pessoas: pessoasIds,
         veiculos: veiculosIds,
       }),
@@ -665,6 +677,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Inputs principais
   const motivoInput = document.getElementById('motivo');
   const responsavelInput = document.getElementById('responsavel');
+  const observacaoInput = document.getElementById('observacao');
 
   // Carregar rascunho salvo (se existir)
   carregarDraft();
@@ -672,6 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Salvar rascunho ao editar campos básicos
   if (motivoInput) motivoInput.addEventListener('input', salvarDraft);
   if (responsavelInput) responsavelInput.addEventListener('input', salvarDraft);
+  if (observacaoInput) observacaoInput.addEventListener('input', salvarDraft);
 
   // Elementos de busca de pessoas (apenas para nova visita)
   const buscaPessoaInput = document.getElementById("buscaPessoaInput");
