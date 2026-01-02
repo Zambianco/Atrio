@@ -8,12 +8,6 @@ function formatarData(data) {
     d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function getCSRFToken() {
-  return document.cookie
-    .split('; ')
-    .find(row => row.startsWith('csrftoken='))?.split('=')[1];
-}
-
 function estaDentro(item) {
   return item.entrada && !item.saida;
 }

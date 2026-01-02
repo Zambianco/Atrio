@@ -12,6 +12,62 @@
   --critical-border: #dc3545;
 }
 
+/* ===== NAVBAR E RODAPE ===== */
+.navbar-custom {
+  background-color: #212b55 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-custom {
+  background-color: #212b55 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.navbar-custom .nav-link {
+  color: rgba(255, 255, 255, 0.85) !important;
+  transition: all 0.2s ease;
+}
+
+.navbar-custom .nav-link:hover {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.navbar-custom .nav-link.active {
+  color: #fff !important;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.navbar-custom .navbar-brand {
+  color: #fff !important;
+}
+
+.navbar-custom .navbar-brand:hover {
+  opacity: 0.9;
+}
+
+.navbar-custom .navbar-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ===== AMBIENTE ===== */
+.env-banner {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+.env-banner-debug {
+  background: #ffc107;
+  color: #1f1f1f;
+}
+
+.env-banner-custom {
+  background: #fd7e14;
+  color: #1f1f1f;
+}
+
 /* ===== STATUS DO SISTEMA ===== */
 .system-status {
   position: fixed;
