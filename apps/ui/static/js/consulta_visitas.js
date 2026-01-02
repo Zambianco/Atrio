@@ -32,11 +32,17 @@ async function carregarVisitas() {
       fetch('/api/veiculos/veiculos/')
     ]);
 
-    const grupos = await gruposResp.json();
-    const visitasPessoas = await visitasPessoasResp.json();
-    const visitasVeiculos = await visitasVeiculosResp.json();
-    const pessoas = await pessoasResp.json();
-    const veiculos = await veiculosResp.json();
+    const gruposData = await gruposResp.json();
+    const visitasPessoasData = await visitasPessoasResp.json();
+    const visitasVeiculosData = await visitasVeiculosResp.json();
+    const pessoasData = await pessoasResp.json();
+    const veiculosData = await veiculosResp.json();
+
+    const grupos = Array.isArray(gruposData) ? gruposData : (gruposData.results || []);
+    const visitasPessoas = Array.isArray(visitasPessoasData) ? visitasPessoasData : (visitasPessoasData.results || []);
+    const visitasVeiculos = Array.isArray(visitasVeiculosData) ? visitasVeiculosData : (visitasVeiculosData.results || []);
+    const pessoas = Array.isArray(pessoasData) ? pessoasData : (pessoasData.results || []);
+    const veiculos = Array.isArray(veiculosData) ? veiculosData : (veiculosData.results || []);
 
     const pessoasMap = {};
     pessoas.forEach(p => pessoasMap[p.id] = p);
@@ -73,6 +79,10 @@ async function carregarVisitas() {
     aplicarFiltros();
     atualizarEstatisticas();
 
+  } catch (error) {
+    console.error('Erro ao carregar visitas:', error);
+    visitasFiltradas = [];
+    renderizarLista();
   } finally {
     document.getElementById('loadingSpinner')?.classList.remove('show');
   }

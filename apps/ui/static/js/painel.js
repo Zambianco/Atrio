@@ -12,41 +12,167 @@ function estaDentro(item) {
   return item.entrada && !item.saida;
 }
 
+function normalizarTexto(valor) {
+  return (valor || '')
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function parseTempoParaMinutos(tempo) {
+  if (tempo == null) return 0;
+  if (typeof tempo === 'number') return tempo;
+
+  const texto = tempo.toString().trim().toLowerCase();
+  if (!texto) return 0;
+
+  if (texto.includes(':')) {
+    const partes = texto.split(':').map(p => parseInt(p, 10));
+    if (partes.some(Number.isNaN)) return 0;
+    if (partes.length === 3) return partes[0] * 60 + partes[1] + partes[2] / 60;
+    if (partes.length === 2) return partes[0] + partes[1] / 60;
+  }
+
+  let minutos = 0;
+  const dias = texto.match(/(\d+)\s*d/);
+  const horas = texto.match(/(\d+)\s*h/);
+  const mins = texto.match(/(\d+)\s*m/);
+  const segs = texto.match(/(\d+)\s*s/);
+
+  if (dias) minutos += parseInt(dias[1], 10) * 24 * 60;
+  if (horas) minutos += parseInt(horas[1], 10) * 60;
+  if (mins) minutos += parseInt(mins[1], 10);
+  if (segs) minutos += parseInt(segs[1], 10) / 60;
+
+  return minutos;
+}
+
+function obterEstadoControles() {
+  const filtro = document.getElementById('filtroPainel');
+  const ordenacao = document.getElementById('ordenacaoPainel');
+
+  return {
+    termo: (filtro && filtro.value) ? filtro.value.trim() : '',
+    ordenacao: ordenacao ? ordenacao.value : 'tempo_desc'
+  };
+}
+
+function filtrarLista(lista, tipo, termoNormalizado) {
+  if (!termoNormalizado) return lista.slice();
+
+  return lista.filter(item => {
+    const empresa = normalizarTexto(item.empresa);
+    if (tipo === 'pessoas') {
+      const nome = normalizarTexto(item.nome);
+      return nome.includes(termoNormalizado) || empresa.includes(termoNormalizado);
+    }
+
+    const placa = normalizarTexto(item.placa);
+    return placa.includes(termoNormalizado) || empresa.includes(termoNormalizado);
+  });
+}
+
+function ordenarLista(lista, ordenacao, tipo) {
+  const partes = (ordenacao || 'tempo_desc').split('_');
+  const campoBase = partes[0];
+  const direcao = partes[1] === 'asc' ? 1 : -1;
+
+  let campo = campoBase;
+  if (campoBase === 'nome' && tipo === 'veiculos') campo = 'placa';
+
+  return lista.slice().sort((a, b) => {
+    let valorA = a[campo];
+    let valorB = b[campo];
+    let comparacao = 0;
+
+    if (campo === 'tempo') {
+      comparacao = parseTempoParaMinutos(valorA) - parseTempoParaMinutos(valorB);
+    } else if (campo === 'entrada') {
+      comparacao = new Date(valorA || 0).getTime() - new Date(valorB || 0).getTime();
+    } else {
+      comparacao = normalizarTexto(valorA).localeCompare(normalizarTexto(valorB));
+    }
+
+    if (comparacao === 0 && campo !== 'entrada') {
+      const fallbackA = new Date(a.entrada || 0).getTime();
+      const fallbackB = new Date(b.entrada || 0).getTime();
+      comparacao = fallbackA - fallbackB;
+    }
+
+    return comparacao * direcao;
+  });
+}
+
+function atualizarIndicadores(data, pessoasFiltradas, veiculosFiltrados) {
+  const totalPessoas = document.getElementById('totalPessoas');
+  const totalVeiculos = document.getElementById('totalVeiculos');
+  const totalEmpresas = document.getElementById('totalEmpresas');
+  const badgePessoas = document.getElementById('badgePessoas');
+  const badgeVeiculos = document.getElementById('badgeVeiculos');
+
+  if (totalPessoas) totalPessoas.textContent = data.pessoas.length;
+  if (totalVeiculos) totalVeiculos.textContent = data.veiculos.length;
+  if (badgePessoas) badgePessoas.textContent = pessoasFiltradas.length;
+  if (badgeVeiculos) badgeVeiculos.textContent = veiculosFiltrados.length;
+
+  const empresasAtivas = new Set();
+  data.pessoas.forEach(p => { if (p.empresa) empresasAtivas.add(normalizarTexto(p.empresa)); });
+  data.veiculos.forEach(v => { if (v.empresa) empresasAtivas.add(normalizarTexto(v.empresa)); });
+  if (totalEmpresas) totalEmpresas.textContent = empresasAtivas.size;
+}
+
+function renderTabelas(pessoas, veiculos) {
+  const tbPessoas = document.querySelector('#tblPessoas tbody');
+  const tbVeiculos = document.querySelector('#tblVeiculos tbody');
+  if (!tbPessoas || !tbVeiculos) return;
+
+  tbPessoas.innerHTML = pessoas.map(p => `
+        <tr onclick="abrirGrupo(${p.grupo_id})" style="cursor:pointer">
+          <td class="fw-semibold">${p.nome}</td>
+          <td>${p.empresa || '-'}</td>
+          <td>${formatarData(p.entrada)}</td>
+          <td class="fw-bold text-primary">${p.tempo}</td>
+        </tr>`).join('');
+
+  tbVeiculos.innerHTML = veiculos.map(v => `
+        <tr onclick="abrirGrupo(${v.grupo_id})" style="cursor:pointer">
+          <td class="fw-bold">${v.placa}</td>
+          <td>${v.empresa || '-'}</td>
+          <td>${formatarData(v.entrada)}</td>
+          <td class="fw-bold text-primary">${v.tempo}</td>
+        </tr>`).join('');
+}
+
+function atualizarPainel() {
+  if (!dadosCache) return;
+
+  const { termo, ordenacao } = obterEstadoControles();
+  const termoNormalizado = normalizarTexto(termo);
+
+  const pessoasFiltradas = ordenarLista(
+    filtrarLista(dadosCache.pessoas, 'pessoas', termoNormalizado),
+    ordenacao,
+    'pessoas'
+  );
+
+  const veiculosFiltrados = ordenarLista(
+    filtrarLista(dadosCache.veiculos, 'veiculos', termoNormalizado),
+    ordenacao,
+    'veiculos'
+  );
+
+  renderTabelas(pessoasFiltradas, veiculosFiltrados);
+  atualizarIndicadores(dadosCache, pessoasFiltradas, veiculosFiltrados);
+}
+
 async function carregarPainel() {
   try {
     const resp = await fetch('/api/visitas/presentes/');
     const data = await resp.json();
     dadosCache = data;
 
-    document.getElementById('totalPessoas').textContent = data.pessoas.length;
-    document.getElementById('totalVeiculos').textContent = data.veiculos.length;
-    document.getElementById('badgePessoas').textContent = data.pessoas.length;
-    document.getElementById('badgeVeiculos').textContent = data.veiculos.length;
-
-    const tbPessoas = document.querySelector('#tblPessoas tbody');
-    const tbVeiculos = document.querySelector('#tblVeiculos tbody');
-    tbPessoas.innerHTML = '';
-    tbVeiculos.innerHTML = '';
-
-    data.pessoas.forEach(p => {
-      tbPessoas.innerHTML += `
-        <tr onclick="abrirGrupo(${p.grupo_id})" style="cursor:pointer">
-          <td class="fw-semibold">${p.nome}</td>
-          <td>${p.empresa || '-'}</td>
-          <td>${formatarData(p.entrada)}</td>
-          <td class="fw-bold text-primary">${p.tempo}</td>
-        </tr>`;
-    });
-
-    data.veiculos.forEach(v => {
-      tbVeiculos.innerHTML += `
-        <tr onclick="abrirGrupo(${v.grupo_id})" style="cursor:pointer">
-          <td class="fw-bold">${v.placa}</td>
-          <td>${v.empresa || '-'}</td>
-          <td>${formatarData(v.entrada)}</td>
-          <td class="fw-bold text-primary">${v.tempo}</td>
-        </tr>`;
-    });
+    atualizarPainel();
   } catch (error) {
     console.error('Erro ao carregar painel:', error);
   }
@@ -280,4 +406,10 @@ function imprimirComprovante() {
 document.addEventListener('DOMContentLoaded', () => {
   carregarPainel();
   setInterval(carregarPainel, 30000);
+
+  const filtro = document.getElementById('filtroPainel');
+  const ordenacao = document.getElementById('ordenacaoPainel');
+
+  if (filtro) filtro.addEventListener('input', atualizarPainel);
+  if (ordenacao) ordenacao.addEventListener('change', atualizarPainel);
 });

@@ -1,493 +1,106 @@
-{% extends "ui\base.html" %}
+<!-- templates/ui/consulta_visitas.html -->
+{% extends "ui/base.html" %}
 {% load static %}
+
 {% block title %}Consulta de Visitas - ABN Portaria{% endblock %}
-{% csrf_token %}
-{% block extra_css %}
-<style>
-.visita-card {
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  overflow: hidden;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(0,0,0,.125);
-  transition: all 0.2s ease;
-}
-
-.visita-card:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
-}
-
-.card-header-custom {
-  background: #fff;
-  font-weight: 600;
-  padding: 1rem 1.25rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.card-header-custom:hover {
-  background: #f8f9fa;
-}
-
-.card-header-custom.active {
-  background: #e9f5ff;
-  color: #0d6efd;
-}
-
-.card-body-custom {
-  background: #fff;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid rgba(0,0,0,.125);
-  display: none;
-}
-
-.card-body-custom.show {
-  display: block;
-}
-
-.btn-expand {
-  transition: transform 0.3s ease;
-  border: none;
-  background: none;
-  font-size: 1.2rem;
-}
-
-.btn-expand.rotated {
-  transform: rotate(180deg);
-}
-
-.badge-dot { 
-  width: .6rem;
-  height: .6rem;
-  border-radius: 50%;
-  display: inline-block;
-  margin-right: .3rem; 
-}
-
-.badge-status { 
-  font-size: .8rem; 
-  padding: .35rem .6rem; 
-  border-radius: .4rem; 
-}
-
-.border-open { border-left: 5px solid #28a745; }
-.border-closed { border-left: 5px solid #dc3545; }
-
-.btn-action {
-  min-width: 100px;
-}
-
-.stats-card {
-  transition: all 0.3s ease;
-  border: none;
-  border-radius: 0.75rem;
-}
-
-.stats-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-}
-
-.advanced-filters {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 0.75rem;
-}
-
-.loading-spinner {
-  display: none;
-  text-align: center;
-  padding: 2rem;
-}
-
-.loading-spinner.show {
-  display: block;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #6c757d;
-}
-
-.empty-state i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
-}
-
-@media (max-width: 768px) { 
-  .card-header-custom { 
-    font-size: .95rem; 
-    padding: 0.75rem 1rem;
-  }
-  
-  .btn-action {
-    min-width: 80px;
-    font-size: 0.875rem;
-  }
-}
-
-.count-badge {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-}
-
-.table-sm-custom td, .table-sm-custom th {
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-}
-
-.quick-actions {
-  background: #f8f9fa;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.active-filters {
-  background: #e7f3ff;
-  border: 1px solid #b3d9ff;
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.filter-tag {
-  background: #0d6efd;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  margin-right: 0.5rem;
-  margin-bottom: 0.25rem;
-  display: inline-block;
-}
-
-/* Estilos para impressão */
-@media print {
-    body * {
-        visibility: hidden;
-    }
-    
-    .modal-dialog,
-    .modal-dialog * {
-        visibility: visible;
-    }
-    
-    .modal {
-        position: absolute;
-        left: 0;
-        top: 0;
-        margin: 0;
-        padding: 0;
-        opacity: 1;
-        background: white;
-    }
-    
-    .modal-dialog {
-        max-width: none;
-        width: 100%;
-        margin: 0;
-    }
-    
-    .modal-content {
-        border: none;
-        box-shadow: none;
-        background: white;
-    }
-    
-    .modal-header,
-    .modal-footer {
-        display: none;
-    }
-    
-    .modal-body {
-        padding: 15px;
-        background: white;
-        font-size: 12px;
-    }
-    
-    .print-header {
-        display: block !important;
-        text-align: center;
-        border-bottom: 2px solid #333;
-        padding-bottom: 8px;
-        margin-bottom: 15px;
-    }
-    
-    .print-header h2 {
-        font-size: 18px;
-        margin: 0;
-    }
-    
-    .print-footer {
-        display: block !important;
-        text-align: center;
-        border-top: 1px solid #ccc;
-        padding-top: 8px;
-        margin-top: 15px;
-        font-size: 10px;
-        color: #666;
-    }
-    
-    .btn {
-        display: none !important;
-    }
-    
-    .badge {
-        border: 1px solid #333 !important;
-        background: white !important;
-        color: #333 !important;
-        font-size: 10px;
-        padding: 2px 6px;
-    }
-    
-    .table {
-        border: 1px solid #333;
-        font-size: 11px;
-        margin-bottom: 10px;
-    }
-    
-    .table th {
-        background: #f8f9fa !important;
-        border: 1px solid #333;
-        padding: 4px 6px;
-        font-weight: bold;
-    }
-    
-    .table td {
-        border: 1px solid #333;
-        padding: 4px 6px;
-    }
-    
-    .list-group-item {
-        border: 1px solid #333 !important;
-        margin-bottom: 3px;
-        padding: 4px 6px;
-        font-size: 11px;
-    }
-    
-    .alert-light {
-        border: 1px solid #333 !important;
-        background: white !important;
-        padding: 6px 8px;
-        font-size: 11px;
-    }
-    
-    h6 {
-        font-size: 12px;
-        margin-bottom: 6px;
-    }
-    
-    .info-section {
-        margin-bottom: 12px;
-    }
-    
-    .compact-table {
-        font-size: 10px;
-    }
-    
-    .compact-table th,
-    .compact-table td {
-        padding: 2px 4px;
-    }
-}
-
-.print-only {
-    display: none;
-}
-
-@media print {
-    .print-only {
-        display: block;
-    }
-    
-    .no-print {
-        display: none !important;
-    }
-    
-    .section-title {
-        font-size: 12px;
-        font-weight: bold;
-        background: #f0f0f0;
-        padding: 4px 6px;
-        border: 1px solid #ccc;
-        margin-bottom: 6px;
-    }
-}
-</style>
-{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid">
+
   <!-- Cabeçalho -->
   <div class="row mb-4">
-    <div class="col-12">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <h1 class="fw-bold text-primary mb-1">
-            <i class="bi bi-search me-2"></i>Consulta de Visitas
-          </h1>
-          <p class="text-muted mb-0">Gerencie e acompanhe todas as visitas do sistema</p>
-        </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-outline-primary" onclick="exportarVisitasCSV()">
-            <i class="bi bi-file-earmark-arrow-down me-1"></i>Exportar CSV
-          </button>
-          <button class="btn btn-primary" onclick="carregarVisitas()">
-            <i class="bi bi-arrow-clockwise me-1"></i>Atualizar
-          </button>
-        </div>
-      </div>
+    <div class="col-12 text-center">
+      <h1 class="fw-bold text-primary">
+        <i class="bi bi-search me-2"></i>Consulta de Visitas
+      </h1>
+      <p class="text-muted">Gerencie e acompanhe todas as visitas do sistema</p>
     </div>
   </div>
 
-  <!-- Filtros Avançados -->
-  <div class="row mb-4">
-    <div class="col-12">
-      <div class="card advanced-filters">
-        <div class="card-header bg-white">
-          <h5 class="card-title mb-0">
-            <i class="bi bi-funnel me-2"></i>Filtros Avançados
-            <button class="btn btn-sm btn-outline-secondary float-end" type="button" onclick="limparFiltros()">
-              <i class="bi bi-x-circle me-1"></i>Limpar
-            </button>
-          </h5>
-        </div>
-        <div class="card-body">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Busca Geral</label>
-              <input type="text" class="form-control" id="filtroTexto" placeholder="Nome, destino, placa, responsável...">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label fw-semibold">Status</label>
-              <select class="form-select" id="filtroStatus">
-                <option value="">Todos</option>
-                <option value="aberta">Abertas</option>
-                <option value="encerrada">Encerradas</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <label class="form-label fw-semibold">Data Início</label>
-              <input type="date" class="form-control" id="filtroDataInicio">
-            </div>
-            <div class="col-md-2">
-              <label class="form-label fw-semibold">Data Fim</label>
-              <input type="date" class="form-control" id="filtroDataFim">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label fw-semibold">Ordenar por</label>
-              <select class="form-select" id="filtroOrdenacao">
-                <option value="recentes">Mais Recentes</option>
-                <option value="antigas">Mais Antigas</option>
-                <option value="nome">Nome A-Z</option>
-                <option value="status">Status</option>
-              </select>
-            </div>
-          </div>
-          
-          <!-- Filtros Ativos -->
-          <div class="active-filters mt-3 d-none" id="activeFilters">
-            <small class="fw-semibold text-muted mb-2 d-block">Filtros Ativos:</small>
-            <div id="filterTags"></div>
-          </div>
-        </div>
-      </div>
+  <!-- Controles: Filtro e Ordenação -->
+  <div class="painel-controls d-flex align-items-center gap-2 flex-wrap">
+    <input type="text"
+           id="filtroTexto"
+           class="form-control form-control-sm filter-input flex-grow-1"
+           placeholder="Buscar nome, empresa, placa ou motivo...">
+
+    <select id="filtroStatus" class="form-select form-select-sm sort-select">
+      <option value="">Todos os status</option>
+      <option value="aberta">Abertas</option>
+      <option value="encerrada">Encerradas</option>
+    </select>
+
+    <input type="date" 
+           id="filtroDataInicio" 
+           class="form-control form-control-sm"
+           style="min-width: 150px;">
+
+    <input type="date" 
+           id="filtroDataFim" 
+           class="form-control form-control-sm"
+           style="min-width: 150px;">
+
+    <select id="filtroOrdenacao" class="form-select form-select-sm sort-select">
+      <option value="recentes">Mais recentes primeiro</option>
+      <option value="antigas">Mais antigas primeiro</option>
+      <option value="nome">Nome A-Z</option>
+      <option value="status">Status</option>
+    </select>
+
+    <div class="d-flex gap-2 ms-auto">
+      <button class="btn btn-outline-secondary btn-sm" onclick="limparFiltros()">
+        <i class="bi bi-x-circle me-1"></i>Limpar
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="aplicarFiltros()">
+        <i class="bi bi-filter me-1"></i>Aplicar
+      </button>
     </div>
+  </div>
+
+  <!-- Filtros Ativos -->
+  <div class="mt-2 mb-3 d-none" id="activeFilters">
+    <small class="fw-semibold text-muted mb-2 d-block">Filtros ativos:</small>
+    <div id="filterTags" class="d-flex flex-wrap gap-2"></div>
   </div>
 
   <!-- Estatísticas -->
   <div class="row mb-4">
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card stats-card border-start border-primary border-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Visitas Abertas</h6>
-              <h3 class="fw-bold text-primary mb-0" id="cntAbertas">0</h3>
-            </div>
-            <div class="bg-primary bg-opacity-10 p-3 rounded">
-              <i class="bi bi-door-open text-primary fs-4"></i>
-            </div>
-          </div>
+    <div class="col-md-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body text-center">
+          <h4 id="cntTotal">0</h4>
+          <p>Total de Visitas</p>
         </div>
       </div>
     </div>
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card stats-card border-start border-success border-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Pessoas Presentes</h6>
-              <h3 class="fw-bold text-success mb-0" id="cntPessoas">0</h3>
-            </div>
-            <div class="bg-success bg-opacity-10 p-3 rounded">
-              <i class="bi bi-people text-success fs-4"></i>
-            </div>
-          </div>
+    <div class="col-md-3">
+      <div class="card bg-success text-white">
+        <div class="card-body text-center">
+          <h4 id="cntAbertas">0</h4>
+          <p>Visitas Abertas</p>
         </div>
       </div>
     </div>
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card stats-card border-start border-warning border-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Veículos Presentes</h6>
-              <h3 class="fw-bold text-warning mb-0" id="cntVeiculos">0</h3>
-            </div>
-            <div class="bg-warning bg-opacity-10 p-3 rounded">
-              <i class="bi bi-truck text-warning fs-4"></i>
-            </div>
-          </div>
+    <div class="col-md-3">
+      <div class="card bg-warning text-dark">
+        <div class="card-body text-center">
+          <h4 id="cntPessoas">0</h4>
+          <p>Pessoas Totais</p>
         </div>
       </div>
     </div>
-    <div class="col-xl-3 col-md-6 mb-3">
-      <div class="card stats-card border-start border-info border-4">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <h6 class="card-title text-muted mb-2">Total de Visitas</h6>
-              <h3 class="fw-bold text-info mb-0" id="cntTotal">0</h3>
-            </div>
-            <div class="bg-info bg-opacity-10 p-3 rounded">
-              <i class="bi bi-list-check text-info fs-4"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Ações Rápidas -->
-  <div class="row mb-3">
-    <div class="col-12">
-      <div class="quick-actions">
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-          <span class="fw-semibold text-muted">Ações Rápidas:</span>
-          <button class="btn btn-sm btn-outline-success" onclick="filtrarPorStatus('aberta')">
-            <i class="bi bi-eye me-1"></i>Ver Abertas
-          </button>
-          <button class="btn btn-sm btn-outline-danger" onclick="filtrarPorStatus('encerrada')">
-            <i class="bi bi-archive me-1"></i>Ver Encerradas
-          </button>
-          <button class="btn btn-sm btn-outline-primary" onclick="mostrarTodasVisitas()">
-            <i class="bi bi-list-ul me-1"></i>Ver Todas
-          </button>
-          <div class="ms-auto">
-            <small class="text-muted" id="contadorResultados">Mostrando 0 visitas</small>
-          </div>
+    <div class="col-md-3">
+      <div class="card bg-info text-white">
+        <div class="card-body text-center">
+          <h4 id="cntVeiculos">0</h4>
+          <p>Veículos Totais</p>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Loading -->
-  <div class="loading-spinner" id="loadingSpinner">
+  <div class="text-center py-5 d-none" id="loadingSpinner">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">Carregando...</span>
     </div>
@@ -500,16 +113,16 @@
   </div>
 
   <!-- Estado Vazio -->
-  <div class="empty-state d-none" id="emptyState">
-    <i class="bi bi-inbox"></i>
-    <h5 class="text-muted">Nenhuma visita encontrada</h5>
+  <div class="text-center py-5 d-none" id="emptyState">
+    <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+    <h5 class="text-muted mt-3">Nenhuma visita encontrada</h5>
     <p class="text-muted">Tente ajustar os filtros ou recarregar a página.</p>
-    <button class="btn btn-primary" onclick="limparFiltros()">
+    <button class="btn btn-primary mt-2" onclick="limparFiltros()">
       <i class="bi bi-arrow-clockwise me-1"></i>Limpar Filtros
     </button>
   </div>
 
-  <!-- Modal para detalhes da visita (partial) -->
+  <!-- Modal para detalhes da visita -->
   {% include 'ui/modal_detalhe_visita.html' %}
 </div>
 {% endblock %}
@@ -518,44 +131,315 @@
 <script src="{% static 'js/consulta_visitas.js' %}"></script>
 <script src="{% static 'js/modal_detalhe_visita.js' %}"></script>
 <script>
-// Funções auxiliares para a interface
-function filtrarPorStatus(status) {
-    document.getElementById('filtroStatus').value = status;
-    aplicarFiltros();
+// Variáveis globais
+let visitasData = [];
+let filtrosAtivos = {};
+
+// Funções auxiliares
+function mostrarLoading(mostrar) {
+    document.getElementById('loadingSpinner').classList.toggle('d-none', !mostrar);
+    document.getElementById('listaVisitas').style.display = mostrar ? 'none' : 'block';
 }
 
-function mostrarTodasVisitas() {
-    document.getElementById('filtroStatus').value = '';
-    document.getElementById('filtroTexto').value = '';
-    document.getElementById('filtroDataInicio').value = '';
-    document.getElementById('filtroDataFim').value = '';
+function mostrarEstadoVazio(mostrar) {
+    document.getElementById('emptyState').classList.toggle('d-none', !mostrar);
+}
+
+function formatarData(dataString) {
+    if (!dataString) return '-';
+    const data = new Date(dataString);
+    return data.toLocaleDateString('pt-BR') + ' ' + data.toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function criarBadgeStatus(aberta) {
+    if (aberta) {
+        return '<span class="badge bg-success">Aberta</span>';
+    }
+    return '<span class="badge bg-secondary">Encerrada</span>';
+}
+
+function renderizarVisitas(visitas) {
+    const container = document.getElementById('listaVisitas');
+    
+    if (visitas.length === 0) {
+        mostrarEstadoVazio(true);
+        return;
+    }
+    
+    mostrarEstadoVazio(false);
+    
+    container.innerHTML = visitas.map(visita => `
+        <div class="card mb-3 visita-card ${visita.aberta ? 'border-open' : 'border-closed'}">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div>
+                        <h6 class="mb-0 fw-bold">${visita.motivo || 'Visita sem motivo'}</h6>
+                        <small class="text-muted">
+                            <i class="bi bi-calendar me-1"></i>${formatarData(visita.entrada)}
+                            ${visita.saida ? `<i class="bi bi-calendar-check ms-2 me-1"></i>${formatarData(visita.saida)}` : ''}
+                        </small>
+                    </div>
+                    ${criarBadgeStatus(visita.aberta)}
+                </div>
+                <div class="d-flex gap-2">
+                    <small class="text-muted">
+                        <i class="bi bi-people me-1"></i>${visita.pessoas_count || 0}
+                        <i class="bi bi-truck ms-2 me-1"></i>${visita.veiculos_count || 0}
+                    </small>
+                    <button class="btn btn-sm btn-outline-primary" 
+                            onclick="abrirDetalhesVisita(${visita.id})"
+                            data-bs-toggle="tooltip" 
+                            title="Ver detalhes">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>Responsável:</strong> ${visita.responsavel || '-'}</p>
+                        <p class="mb-1"><strong>Autorizado por:</strong> ${visita.autorizado_por || '-'}</p>
+                    </div>
+                    <div class="col-md-6">
+                        ${visita.pessoas && visita.pessoas.length > 0 ? `
+                            <p class="mb-1"><strong>Pessoas:</strong></p>
+                            <div class="d-flex flex-wrap gap-1">
+                                ${visita.pessoas.slice(0, 3).map(p => `
+                                    <span class="badge bg-light text-dark">${p.nome}</span>
+                                `).join('')}
+                                ${visita.pessoas.length > 3 ? `
+                                    <span class="badge bg-secondary">+${visita.pessoas.length - 3}</span>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Inicializar tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(el => new bootstrap.Tooltip(el));
+}
+
+function atualizarEstatisticas(visitas) {
+    const total = visitas.length;
+    const abertas = visitas.filter(v => v.aberta).length;
+    const totalPessoas = visitas.reduce((sum, v) => sum + (v.pessoas_count || 0), 0);
+    const totalVeiculos = visitas.reduce((sum, v) => sum + (v.veiculos_count || 0), 0);
+    
+    document.getElementById('cntTotal').textContent = total;
+    document.getElementById('cntAbertas').textContent = abertas;
+    document.getElementById('cntPessoas').textContent = totalPessoas;
+    document.getElementById('cntVeiculos').textContent = totalVeiculos;
+}
+
+function atualizarFiltrosAtivos() {
+    const container = document.getElementById('activeFilters');
+    const tagsContainer = document.getElementById('filterTags');
+    
+    tagsContainer.innerHTML = '';
+    let temFiltros = false;
+    
+    // Texto
+    if (filtrosAtivos.texto) {
+        temFiltros = true;
+        tagsContainer.innerHTML += `
+            <span class="badge bg-primary">
+                Busca: "${filtrosAtivos.texto}"
+                <button class="btn-close btn-close-white" style="font-size: 0.6rem; margin-left: 4px;"
+                        onclick="removerFiltro('texto')"></button>
+            </span>
+        `;
+    }
+    
+    // Status
+    if (filtrosAtivos.status) {
+        temFiltros = true;
+        const statusText = filtrosAtivos.status === 'aberta' ? 'Abertas' : 'Encerradas';
+        const cor = filtrosAtivos.status === 'aberta' ? 'success' : 'secondary';
+        tagsContainer.innerHTML += `
+            <span class="badge bg-${cor}">
+                Status: ${statusText}
+                <button class="btn-close btn-close-white" style="font-size: 0.6rem; margin-left: 4px;"
+                        onclick="removerFiltro('status')"></button>
+            </span>
+        `;
+    }
+    
+    // Data início
+    if (filtrosAtivos.dataInicio) {
+        temFiltros = true;
+        tagsContainer.innerHTML += `
+            <span class="badge bg-info">
+                Desde: ${new Date(filtrosAtivos.dataInicio).toLocaleDateString('pt-BR')}
+                <button class="btn-close btn-close-white" style="font-size: 0.6rem; margin-left: 4px;"
+                        onclick="removerFiltro('dataInicio')"></button>
+            </span>
+        `;
+    }
+    
+    // Data fim
+    if (filtrosAtivos.dataFim) {
+        temFiltros = true;
+        tagsContainer.innerHTML += `
+            <span class="badge bg-info">
+                Até: ${new Date(filtrosAtivos.dataFim).toLocaleDateString('pt-BR')}
+                <button class="btn-close btn-close-white" style="font-size: 0.6rem; margin-left: 4px;"
+                        onclick="removerFiltro('dataFim')"></button>
+            </span>
+        `;
+    }
+    
+    container.classList.toggle('d-none', !temFiltros);
+}
+
+function removerFiltro(tipo) {
+    delete filtrosAtivos[tipo];
+    
+    // Atualizar inputs
+    const inputMap = {
+        texto: 'filtroTexto',
+        status: 'filtroStatus',
+        dataInicio: 'filtroDataInicio',
+        dataFim: 'filtroDataFim'
+    };
+    
+    if (inputMap[tipo]) {
+        document.getElementById(inputMap[tipo]).value = '';
+    }
+    
     aplicarFiltros();
 }
 
 function limparFiltros() {
-    document.getElementById('filtroTexto').value = '';
-    document.getElementById('filtroStatus').value = '';
-    document.getElementById('filtroDataInicio').value = '';
-    document.getElementById('filtroDataFim').value = '';
-    document.getElementById('filtroOrdenacao').value = 'recentes';
+    filtrosAtivos = {};
     
-    document.getElementById('activeFilters').classList.add('d-none');
-    document.getElementById('filterTags').innerHTML = '';
+    // Limpar todos os inputs
+    ['filtroTexto', 'filtroStatus', 'filtroDataInicio', 'filtroDataFim', 'filtroOrdenacao'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'SELECT') {
+                el.selectedIndex = 0;
+            } else {
+                el.value = '';
+            }
+        }
+    });
     
     aplicarFiltros();
 }
 
-function exportarVisitasCSV() {
-    mostrarToast('Exportação em desenvolvimento...', 'info');
+async function aplicarFiltros() {
+    // Coletar valores atuais
+    filtrosAtivos = {
+        texto: document.getElementById('filtroTexto').value.trim(),
+        status: document.getElementById('filtroStatus').value,
+        dataInicio: document.getElementById('filtroDataInicio').value,
+        dataFim: document.getElementById('filtroDataFim').value,
+        ordenacao: document.getElementById('filtroOrdenacao').value
+    };
+    
+    // Atualizar UI de filtros ativos
+    atualizarFiltrosAtivos();
+    
+    // Mostrar loading
+    mostrarLoading(true);
+    
+    try {
+        // Aqui você faria a requisição para a API com os filtros
+        // Por enquanto, vamos simular com dados locais se disponíveis
+        let visitasFiltradas = [...visitasData];
+        
+        // Aplicar filtros locais (em produção, isso seria feito no backend)
+        if (filtrosAtivos.texto) {
+            const busca = filtrosAtivos.texto.toLowerCase();
+            visitasFiltradas = visitasFiltradas.filter(v => 
+                (v.motivo && v.motivo.toLowerCase().includes(busca)) ||
+                (v.responsavel && v.responsavel.toLowerCase().includes(busca)) ||
+                (v.autorizado_por && v.autorizado_por.toLowerCase().includes(busca)) ||
+                (v.pessoas && v.pessoas.some(p => p.nome && p.nome.toLowerCase().includes(busca))) ||
+                (v.veiculos && v.veiculos.some(v => v.placa && v.placa.toLowerCase().includes(busca)))
+            );
+        }
+        
+        if (filtrosAtivos.status) {
+            visitasFiltradas = visitasFiltradas.filter(v => 
+                filtrosAtivos.status === 'aberta' ? v.aberta : !v.aberta
+            );
+        }
+        
+        // Ordenação
+        if (filtrosAtivos.ordenacao === 'recentes') {
+            visitasFiltradas.sort((a, b) => new Date(b.entrada) - new Date(a.entrada));
+        } else if (filtrosAtivos.ordenacao === 'antigas') {
+            visitasFiltradas.sort((a, b) => new Date(a.entrada) - new Date(b.entrada));
+        } else if (filtrosAtivos.ordenacao === 'nome') {
+            visitasFiltradas.sort((a, b) => (a.motivo || '').localeCompare(b.motivo || ''));
+        }
+        
+        // Renderizar resultados
+        renderizarVisitas(visitasFiltradas);
+        atualizarEstatisticas(visitasFiltradas);
+        
+    } catch (error) {
+        console.error('Erro ao aplicar filtros:', error);
+        window.showAlert('Erro ao carregar visitas. Tente novamente.', 'Erro');
+    } finally {
+        mostrarLoading(false);
+    }
 }
 
-// Adicionar eventos aos filtros
+async function carregarVisitas() {
+    mostrarLoading(true);
+    
+    try {
+        // Aqui você faria a requisição para a API
+        // const response = await fetch('/api/visitas/');
+        // visitasData = await response.json();
+        
+        // Por enquanto, vamos usar dados de exemplo ou vazio
+        visitasData = [];
+        
+        aplicarFiltros();
+        
+    } catch (error) {
+        console.error('Erro ao carregar visitas:', error);
+        window.showAlert('Erro ao carregar visitas. Verifique sua conexão.', 'Erro');
+        mostrarEstadoVazio(true);
+    } finally {
+        mostrarLoading(false);
+    }
+}
+
+function abrirDetalhesVisita(id) {
+    // Usa o mesmo modal do painel
+    if (typeof window.abrirModal === 'function') {
+        window.abrirModal(id);
+    } else {
+        console.error('Função abrirModal não disponível');
+        window.showAlert('Função não disponível no momento', 'Aviso');
+    }
+}
+
+// Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('filtroTexto').addEventListener('input', aplicarFiltros);
-    document.getElementById('filtroStatus').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroDataInicio').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroDataFim').addEventListener('change', aplicarFiltros);
-    document.getElementById('filtroOrdenacao').addEventListener('change', aplicarFiltros);
+    // Configurar eventos nos filtros
+    ['filtroTexto', 'filtroStatus', 'filtroDataInicio', 'filtroDataFim', 'filtroOrdenacao'].forEach(id => {
+        document.getElementById(id).addEventListener('change', aplicarFiltros);
+    });
+    
+    document.getElementById('filtroTexto').addEventListener('input', function() {
+        clearTimeout(this.searchTimer);
+        this.searchTimer = setTimeout(aplicarFiltros, 300);
+    });
+    
+    // Carregar dados iniciais
+    carregarVisitas();
 });
 </script>
 {% endblock %}
