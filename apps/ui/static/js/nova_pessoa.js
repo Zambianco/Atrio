@@ -247,8 +247,13 @@ document.addEventListener("DOMContentLoaded", () => {
     adicionarDocumento();
   };
 
-  const renderListaPessoas = (pessoas) => {
+  const renderListaPessoas = (pessoas, query) => {
     if (!pessoas.length) {
+      if (query && query.startsWith("#")) {
+        const idText = query.slice(1).trim();
+        listaPessoa.innerHTML = `<li class="list-group-item text-center text-muted">Nenhuma pessoa com ID ${idText || "informado"}</li>`;
+        return;
+      }
       listaPessoa.innerHTML =
         '<li class="list-group-item text-center text-muted">Nenhuma pessoa encontrada</li>';
       return;
@@ -338,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     const pessoas = await buscarPessoas(query);
-    renderListaPessoas(pessoas);
+    renderListaPessoas(pessoas, query);
   });
 
   btnBuscarPessoa.addEventListener("click", () => {

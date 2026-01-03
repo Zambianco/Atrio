@@ -19,7 +19,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const veiculos = await buscarVeiculos(q);
         if (!lista) return;
         if (!veiculos.length) {
-          lista.innerHTML = `<li class="list-group-item text-center text-muted">Nenhum veículo encontrado</li>`;
+          if (q.startsWith('#')) {
+            const idText = q.slice(1).trim();
+            lista.innerHTML = `<li class="list-group-item text-center text-muted">Nenhum veiculo com ID ${idText || 'informado'}</li>`;
+          } else {
+            lista.innerHTML = `<li class="list-group-item text-center text-muted">Nenhum veículo encontrado</li>`;
+          }
           return;
         }
 

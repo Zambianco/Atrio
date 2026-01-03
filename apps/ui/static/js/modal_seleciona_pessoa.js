@@ -20,7 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const pessoas = await buscarPessoas(q);
         if (!lista) return;
         if (!pessoas.length) {
-          lista.innerHTML = `<li class="list-group-item text-center text-muted">Nenhuma pessoa encontrada</li>`;
+          if (q.startsWith('#')) {
+            const idText = q.slice(1).trim();
+            lista.innerHTML = `<li class="list-group-item text-center text-muted">Nenhuma pessoa com ID ${idText || 'informado'}</li>`;
+          } else {
+            lista.innerHTML = `<li class="list-group-item text-center text-muted">Nenhuma pessoa encontrada</li>`;
+          }
           return;
         }
 

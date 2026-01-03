@@ -16,7 +16,17 @@ class VeiculoViewSet(ModelViewSet):
     @action(detail=False, methods=['get'])
     def buscar(self, request):
         query = request.GET.get('q', '').strip()
-        
+
+        if query.startswith("#"):
+            id_text = query[1:].strip()
+            if id_text.isdigit():
+                veiculo = self.get_queryset().filter(id=int(id_text)).first()
+                if not veiculo:
+                    return Response({'veiculos': []})
+                serializer = self.get_serializer([veiculo], many=True)
+                return Response({'veiculos': serializer.data})
+            return Response({'veiculos': []})
+
         if len(query) < 2:
             return Response({'veiculos': []})
         

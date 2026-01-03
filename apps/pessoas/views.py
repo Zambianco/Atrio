@@ -15,7 +15,17 @@ class PessoaViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def buscar(self, request):
         query = request.GET.get('q', '').strip()
-        
+
+        if query.startswith("#"):
+            id_text = query[1:].strip()
+            if id_text.isdigit():
+                pessoa = self.get_queryset().filter(id=int(id_text)).first()
+                if not pessoa:
+                    return Response({'pessoas': []})
+                serializer = self.get_serializer([pessoa], many=True)
+                return Response({'pessoas': serializer.data})
+            return Response({'pessoas': []})
+
         if len(query) < 2:
             return Response({'pessoas': []})
         

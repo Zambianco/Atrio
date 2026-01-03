@@ -125,8 +125,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   };
 
-  const renderListaVeiculos = (veiculos) => {
+  const renderListaVeiculos = (veiculos, query) => {
     if (!veiculos.length) {
+      if (query && query.startsWith("#")) {
+        const idText = query.slice(1).trim();
+        listaVeiculo.innerHTML = `<li class="list-group-item text-center text-muted">Nenhum veiculo com ID ${idText || "informado"}</li>`;
+        return;
+      }
       listaVeiculo.innerHTML =
         '<li class="list-group-item text-center text-muted">Nenhum veiculo encontrado</li>';
       return;
@@ -203,7 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     const veiculos = await buscarVeiculos(query);
-    renderListaVeiculos(veiculos);
+    renderListaVeiculos(veiculos, query);
   });
 
   btnBuscarVeiculo.addEventListener("click", () => {
