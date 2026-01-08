@@ -52,7 +52,7 @@ Abra no navegador: `http://127.0.0.1:8000/`
 
 ```bash
 cp Atrio/.env.example Atrio/.env
-touch db.sqlite3
+touch atrio.sqlite3
 sudo mkdir -p /mnt/atrio-backups
 sudo chown -R $USER:$USER /mnt/atrio-backups
 export BACKUP_HOST_DIR=/mnt/atrio-backups
@@ -64,7 +64,7 @@ docker compose exec web python manage.py createsuperuser
 
 ```powershell
 copy Atrio\.env.example Atrio\.env
-ni db.sqlite3 -ItemType File
+ni atrio.sqlite3 -ItemType File
 mkdir D:\AtrioBackups
 $env:BACKUP_HOST_DIR="D:/AtrioBackups"
 docker compose -f docker-compose.yml -f docker-compose.windows.yml up -d --build
@@ -89,7 +89,7 @@ docker compose exec web python manage.py createsuperuser
 ```
 
 4) Backups do banco (SQLite):
-- O banco fica em `./db.sqlite3` para facilitar download manual.
+- O banco fica em `./atrio.sqlite3` para facilitar download manual.
 - Os backups sao salvos em `/mnt/atrio-backups` dentro do container.
 - O intervalo padrao e 3600s (1h). Para ajustar, edite `BACKUP_INTERVAL_SECONDS` no `docker-compose.yml`.
 - Para mudar a pasta de backups, edite `BACKUP_DIR` em `Atrio/.env` e ajuste o volume no `docker-compose.yml`.
@@ -101,7 +101,7 @@ docker compose exec web python manage.py createsuperuser
 
 Crie a pasta de backup no host:
 ```bash
-touch db.sqlite3
+touch atrio.sqlite3
 sudo mkdir -p /mnt/atrio-backups
 sudo chown -R $USER:$USER /mnt/atrio-backups
 ```
