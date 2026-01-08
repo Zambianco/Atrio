@@ -1,0 +1,4 @@
+services:
+  backup:
+    volumes:
+      - ${BACKUP_HOST_DIR:-D:/AtrioBackups}:/mnt/atrio-backups

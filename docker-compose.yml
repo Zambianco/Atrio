@@ -1,0 +1,43 @@
+services:
+  web:
+    build: .
+    env_file:
+      - Atrio/.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db.sqlite3:/app/db.sqlite3
+      - ./staticfiles:/app/staticfiles
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn Atrio.wsgi:application --bind 0.0.0.0:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request, sys; r=urllib.request.urlopen('http://127.0.0.1:8000/'); sys.exit(0 if r.status < 400 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  backup:
+    image: python:3.12-slim
+    env_file:
+      - Atrio/.env
+    environment:
+      - BACKUP_INTERVAL_SECONDS=3600
+    volumes:
+      - ./db.sqlite3:/data/db.sqlite3
+      - ${BACKUP_HOST_DIR:-/mnt/atrio-backups}:/mnt/atrio-backups
+    command: >
+      sh -c "python - <<'PY'
+      import os, time, shutil, datetime
+      src = '/data/db.sqlite3'
+      dst_dir = os.getenv('BACKUP_DIR', '/backups')
+      os.makedirs(dst_dir, exist_ok=True)
+      interval = int(os.getenv('BACKUP_INTERVAL_SECONDS', '3600'))
+      while True:
+          if os.path.exists(src):
+              ts = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+              dst = os.path.join(dst_dir, f'db-{ts}.sqlite3')
+              shutil.copy2(src, dst)
+          time.sleep(interval)
+      PY"

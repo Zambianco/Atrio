@@ -39,6 +39,7 @@ venv.bak/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+staticfiles/
 
 # IDE
 .vscode/
@@ -48,6 +49,7 @@ db.sqlite3-journal
 
 # Arquivos do projeto
 tree.txt  # Se não quiser versionar o tree
+.env
 
 # System files
 .DS_Store
