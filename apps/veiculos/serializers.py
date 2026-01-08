@@ -13,6 +13,8 @@ class VeiculoSerializer(serializers.ModelSerializer):
         normalized = re.sub(r"[^A-Z0-9]", "", (value or "").upper())
         if not normalized:
             raise serializers.ValidationError("Informe uma placa valida.")
+        if len(normalized) not in (7, 8):
+            raise serializers.ValidationError("A placa deve ter 7 ou 8 caracteres.")
 
         prefix = normalized[:3]
         suffix = normalized[-4:] if len(normalized) >= 4 else normalized

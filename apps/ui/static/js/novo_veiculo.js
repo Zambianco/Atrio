@@ -88,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const limparCampos = () => {
     placa.value = "";
+    placa.dataset.placaRaw = "";
     empresa.value = "";
     modelo.value = "";
     cor.value = "";
@@ -101,7 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
   btnLimpar?.addEventListener("click", () => limparCampos());
 
   const verificarPlacaExistente = async () => {
-    const placaValue = placa.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const placaValue = (placa.dataset.placaRaw || placa.value || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
     if (!placaValue) {
       placaExiste.classList.add("d-none");
       return false;
@@ -186,6 +189,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       placa.value = veiculo.placa || "";
+      placa.dataset.placaRaw = (veiculo.placa || "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "");
       empresa.value = veiculo.empresa || "";
       modelo.value = veiculo.modelo || "";
       cor.value = veiculo.cor || "";
@@ -223,7 +229,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setModoEdicao(null);
 
   btn.addEventListener("click", async () => {
-    const placaValue = placa.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const placaValue = (placa.dataset.placaRaw || placa.value || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
 
     if (!placaValue) {
       await showMessage("Informe a placa.");
