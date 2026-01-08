@@ -3,12 +3,16 @@ services:
     build: .
     env_file:
       - Atrio/.env
+    cpus: ${WEB_CPUS:-1.0}
+    mem_limit: ${WEB_MEM:-512m}
+    environment:
+      - DB_NAME=/data/atrio.sqlite3
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${WEB_PORT:-8000}:8000"
     volumes:
-      - ./atrio.sqlite3:/app/atrio.sqlite3
-      - ./staticfiles:/app/staticfiles
+      - atrio_db:/data
+      - staticfiles:/app/staticfiles
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -23,12 +27,14 @@ services:
     image: python:3.12-slim
     env_file:
       - Atrio/.env
+    cpus: ${BACKUP_CPUS:-0.25}
+    mem_limit: ${BACKUP_MEM:-128m}
     restart: unless-stopped
     environment:
       - BACKUP_INTERVAL_SECONDS=3600
       - BACKUP_RETAIN_COUNT=168
     volumes:
-      - ./atrio.sqlite3:/data/atrio.sqlite3
+      - atrio_db:/data
       - ${BACKUP_HOST_DIR:-/mnt/atrio-backups}:/mnt/atrio-backups
     command:
       - python
@@ -58,3 +64,7 @@ services:
                     except OSError:
                         pass
             time.sleep(interval)
+
+volumes:
+  atrio_db:
+  staticfiles:
