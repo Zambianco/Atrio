@@ -6,7 +6,7 @@ Sistema de controle de acesso e portaria em Django.
 
 - Python 3.12+
 
-## Setup rapido
+## Desenvolvimento (sem Docker)
 
 1) Crie o arquivo de ambiente:
 ```powershell
@@ -46,7 +46,28 @@ Abra no navegador: `http://127.0.0.1:8000/`
 - O comando `runserver` continua sendo servidor de desenvolvimento.
 - Para producao com Docker, veja a secao abaixo.
 
-## Producao com Docker
+## Producao (Docker)
+
+### Linux
+
+```bash
+cp Atrio/.env.example Atrio/.env
+sudo mkdir -p /mnt/atrio-backups
+sudo chown -R $USER:$USER /mnt/atrio-backups
+export BACKUP_HOST_DIR=/mnt/atrio-backups
+docker compose up -d --build
+docker compose exec web python manage.py createsuperuser
+```
+
+### Windows
+
+```powershell
+copy Atrio\.env.example Atrio\.env
+mkdir D:\AtrioBackups
+$env:BACKUP_HOST_DIR="D:/AtrioBackups"
+docker compose -f docker-compose.yml -f docker-compose.windows.yml up -d --build
+docker compose exec web python manage.py createsuperuser
+```
 
 1) Crie o arquivo de ambiente:
 ```powershell
