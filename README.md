@@ -15,7 +15,7 @@ copy Atrio\.env.example Atrio\.env
 
 2) Instale as dependencias:
 ```powershell
-pip install -r requiriments.txt
+pip install -r requirements.txt
 ```
 
 3) Rode as migracoes:
