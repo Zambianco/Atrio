@@ -15,6 +15,7 @@ sys.path.insert(0, str(BASE_DIR))
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
+APP_VERSION = os.getenv("APP_VERSION", "1.0.0")
 
 _allowed_hosts = os.getenv("ALLOWED_HOSTS", "").strip()
 if _allowed_hosts:
@@ -71,6 +72,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.ui.context_processors.app_version",
             ],
         },
     },

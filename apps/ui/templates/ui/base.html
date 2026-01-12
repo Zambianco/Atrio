@@ -124,6 +124,11 @@
 
 <!-- Conteúdo Principal -->
 <main class="container py-4 flex-grow-1">
+  <div class="d-flex justify-content-end mb-2">
+    <a class="small text-decoration-none" href="https://github.com/Zambianco/Atrio/releases" target="_blank" rel="noopener noreferrer">
+      <i class="bi bi-github me-1"></i>GitHub
+    </a>
+  </div>
   {% block content %}{% endblock %}
 </main>
 
@@ -141,10 +146,10 @@
       </div>
       <div class="col-md-6 text-md-end">
         <p class="small text-light mb-0 opacity-75">
-          <i class="bi bi-c-circle me-1"></i> {% now "Y" %} Atrio
+          <i class="bi bi-c-circle me-1"></i> © 2026 Atrio · MIT License
         </p>
         <p class="small text-light opacity-75 mb-0">
-          <i class="bi bi-code-slash me-1"></i> v1.0.0
+          <i class="bi bi-code-slash me-1"></i> v{{ APP_VERSION }}
         </p>
       </div>
     </div>
