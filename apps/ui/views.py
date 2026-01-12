@@ -1,5 +1,8 @@
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+from django.views.decorators.http import require_GET
 
 from apps.visitas.models import GrupoVisita, VisitaPessoa, VisitaVeiculo
 
@@ -44,3 +47,18 @@ def cadastro_pessoa(request):
 @login_required
 def cadastro_veiculo(request):
     return render(request, "ui/novo_veiculo.html")
+
+
+@require_GET
+def hora_atual(request):
+    now = timezone.localtime(timezone.now())
+    return JsonResponse({
+        "iso": now.isoformat(),
+        "timestamp_ms": int(now.timestamp() * 1000),
+    })
+
+
+@login_required
+def relogio(request):
+    now = timezone.localtime(timezone.now())
+    return render(request, "ui/relogio.html", {"now": now})

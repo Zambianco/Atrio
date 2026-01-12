@@ -1,19 +1,58 @@
-// Atualizar hora atual
-function updateCurrentTime() {
-  const now = new Date();
+// Atualizar hora atual usando offset do servidor
+function updateCurrentTimeWithOffset(offsetMs) {
+  const now = new Date(Date.now() + offsetMs);
   const timeString = now.toLocaleTimeString('pt-BR', {
     hour: '2-digit',
     minute: '2-digit'
   });
+
   const timeElement = document.getElementById('currentTime');
   if (timeElement) {
     timeElement.textContent = timeString;
   }
+
+  const clockElements = document.querySelectorAll('.server-clock');
+  if (clockElements.length) {
+    clockElements.forEach((el) => {
+      el.textContent = timeString;
+    });
+  }
 }
 
-// Inicializar hora e atualizar a cada minuto
-updateCurrentTime();
-setInterval(updateCurrentTime, 60000);
+function scheduleMinuteAlignedUpdates(offsetMs) {
+  const now = new Date(Date.now() + offsetMs);
+  const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+  const delay = Math.max(msToNextMinute, 0);
+
+  updateCurrentTimeWithOffset(offsetMs);
+
+  setTimeout(() => {
+    updateCurrentTimeWithOffset(offsetMs);
+    setInterval(() => updateCurrentTimeWithOffset(offsetMs), 60000);
+  }, delay);
+}
+
+async function initServerClock() {
+  const hasClock = document.getElementById('currentTime') || document.querySelector('.server-clock');
+  if (!hasClock) return;
+
+  try {
+    const response = await fetch('/hora-atual/', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Falha ao obter horario do servidor');
+
+    const data = await response.json();
+    const serverMs = Number(data.timestamp_ms);
+    if (!Number.isFinite(serverMs)) throw new Error('Horario do servidor invalido');
+
+    const offsetMs = serverMs - Date.now();
+    scheduleMinuteAlignedUpdates(offsetMs);
+  } catch (error) {
+    console.warn('Falha ao sincronizar horario do servidor:', error);
+    scheduleMinuteAlignedUpdates(0);
+  }
+}
+
+initServerClock();
 
 // Funcao de confirmacao modal
 window.showConfirm = function(message, title) {

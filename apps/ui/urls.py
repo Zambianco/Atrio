@@ -6,6 +6,8 @@ app_name = "ui"
 
 urlpatterns = [
     path("", views.painel, name="painel"),
+    path("hora-atual/", views.hora_atual, name="hora_atual"),
+    path("hora/", views.relogio, name="relogio"),
     path("nova-visita/", views.nova_visita, name="nova_visita"),
     path("entrada/", views.entrada, name="entrada"),
     path("cadastro-pessoa/", views.cadastro_pessoa, name="cadastro_pessoa"),
