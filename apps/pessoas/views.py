@@ -93,7 +93,7 @@ class DocumentoViewSet(viewsets.ModelViewSet):
             .values_list("nome", flat=True)
             .first()
         )
-        if tipo_nome and tipo_nome.upper() == "CPF":
+        if tipo_nome and tipo_nome.upper() in {"CPF", "CNH"}:
             numero = normalize_digits(numero)
 
         queryset = Documento.objects.filter(

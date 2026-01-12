@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let pessoaEmEdicao = null;
   let documentosRemovidos = [];
   const CPF_DIGITS_LEN = 11;
+  const CNH_DIGITS_LEN = 11;
 
   const showMessage = (message) => {
     if (window.showAlert) return window.showAlert(message);
@@ -102,6 +103,30 @@ document.addEventListener("DOMContentLoaded", () => {
     return check === parseInt(digits[10], 10);
   };
 
+  const isValidCNH = (digits) => {
+    if (digits.length !== CNH_DIGITS_LEN) return false;
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(digits[i], 10) * (9 - i);
+    }
+    let mod = sum % 11;
+    let firstCheck = mod >= 10 ? 0 : mod;
+    let desc = mod >= 10 ? 2 : 0;
+
+    sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(digits[i], 10) * (i + 1);
+    }
+    sum += desc;
+    mod = sum % 11;
+    let secondCheck = mod >= 10 ? 0 : mod;
+
+    return (
+      firstCheck === parseInt(digits[9], 10) &&
+      secondCheck === parseInt(digits[10], 10)
+    );
+  };
+
   const getTipoDocumentoNome = (tipoId) => {
     const tipo = tiposDocumento.find((item) => String(item.id) === String(tipoId));
     return tipo?.nome || "";
@@ -111,12 +136,24 @@ document.addEventListener("DOMContentLoaded", () => {
     return getTipoDocumentoNome(tipoId).toUpperCase() === "CPF";
   };
 
-  const setCpfInvalidState = (row, invalid) => {
-    const aviso = row.querySelector(".cpf-invalido");
+  const isCnhTipoDocumento = (tipoId) => {
+    return getTipoDocumentoNome(tipoId).toUpperCase() === "CNH";
+  };
+
+  const setDocumentoInvalidState = (row, tipoNome, invalid) => {
+    const avisoCpf = row.querySelector(".cpf-invalido");
+    const avisoCnh = row.querySelector(".cnh-invalido");
     const numeroInput = row.querySelector(".numero-documento");
     if (!numeroInput) return;
-    if (aviso) aviso.classList.toggle("d-none", !invalid);
-    numeroInput.classList.toggle("is-invalid", invalid);
+    if (tipoNome === "CPF") row.dataset.cpfInvalid = invalid ? "1" : "0";
+    if (tipoNome === "CNH") row.dataset.cnhInvalid = invalid ? "1" : "0";
+
+    const cpfInvalid = row.dataset.cpfInvalid === "1";
+    const cnhInvalid = row.dataset.cnhInvalid === "1";
+
+    if (avisoCpf) avisoCpf.classList.toggle("d-none", !cpfInvalid);
+    if (avisoCnh) avisoCnh.classList.toggle("d-none", !cnhInvalid);
+    numeroInput.classList.toggle("is-invalid", cpfInvalid || cnhInvalid);
   };
 
   const formatCpfRow = (row) => {
@@ -126,34 +163,65 @@ document.addEventListener("DOMContentLoaded", () => {
     return digits;
   };
 
+  const normalizeCnhRow = (row) => {
+    const numeroInput = row.querySelector(".numero-documento");
+    const digits = onlyDigits(numeroInput.value).slice(0, CNH_DIGITS_LEN);
+    numeroInput.value = digits;
+    return digits;
+  };
+
   const validateCpfRow = (row, showIncomplete = false) => {
     const numeroInput = row.querySelector(".numero-documento");
     const digits = onlyDigits(numeroInput.value);
     if (!digits) {
-      setCpfInvalidState(row, false);
+      setDocumentoInvalidState(row, "CPF", false);
       return true;
     }
     if (digits.length !== CPF_DIGITS_LEN) {
-      setCpfInvalidState(row, showIncomplete);
+      setDocumentoInvalidState(row, "CPF", showIncomplete);
       return !showIncomplete;
     }
     const valid = isValidCPF(digits);
-    setCpfInvalidState(row, !valid);
+    setDocumentoInvalidState(row, "CPF", !valid);
     return valid;
   };
 
-  const applyCpfMode = (row) => {
+  const validateCnhRow = (row, showIncomplete = false) => {
+    const numeroInput = row.querySelector(".numero-documento");
+    const digits = onlyDigits(numeroInput.value);
+    if (!digits) {
+      setDocumentoInvalidState(row, "CNH", false);
+      return true;
+    }
+    if (digits.length !== CNH_DIGITS_LEN) {
+      setDocumentoInvalidState(row, "CNH", showIncomplete);
+      return !showIncomplete;
+    }
+    const valid = isValidCNH(digits);
+    setDocumentoInvalidState(row, "CNH", !valid);
+    return valid;
+  };
+
+  const applyDocumentoMode = (row) => {
     const select = row.querySelector(".tipo-documento");
     const numeroInput = row.querySelector(".numero-documento");
     const isCpf = isCpfTipoDocumento(select.value);
+    const isCnh = isCnhTipoDocumento(select.value);
     if (isCpf) {
       numeroInput.maxLength = 14;
       numeroInput.setAttribute("inputmode", "numeric");
       formatCpfRow(row);
+      setDocumentoInvalidState(row, "CNH", false);
+    } else if (isCnh) {
+      numeroInput.maxLength = 11;
+      numeroInput.setAttribute("inputmode", "numeric");
+      normalizeCnhRow(row);
+      setDocumentoInvalidState(row, "CPF", false);
     } else {
       numeroInput.maxLength = 100;
       numeroInput.removeAttribute("inputmode");
-      setCpfInvalidState(row, false);
+      setDocumentoInvalidState(row, "CPF", false);
+      setDocumentoInvalidState(row, "CNH", false);
     }
   };
 
@@ -161,7 +229,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const tipoId = row.querySelector(".tipo-documento").value;
     const numeroInput = row.querySelector(".numero-documento");
     const raw = numeroInput.value.trim();
-    return isCpfTipoDocumento(tipoId) ? onlyDigits(raw) : raw;
+    return isCpfTipoDocumento(tipoId) || isCnhTipoDocumento(tipoId)
+      ? onlyDigits(raw)
+      : raw;
   };
 
   const setModoEdicao = (pessoa) => {
@@ -209,7 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .forEach((select) => montarSelectTipos(select));
       documentosContainer
         .querySelectorAll(".documento-row")
-        .forEach((row) => applyCpfMode(row));
+        .forEach((row) => applyDocumentoMode(row));
     } catch (err) {
       console.error(err);
     }
@@ -292,18 +362,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     select.addEventListener("change", () => {
-      applyCpfMode(row);
+      applyDocumentoMode(row);
       verificarDocumentoExistente(row);
     });
     numeroInput.addEventListener("input", () => {
       if (isCpfTipoDocumento(select.value)) {
-        formatCpfRow(row);
-        setCpfInvalidState(row, false);
+        const digits = formatCpfRow(row);
+        if (digits.length === CPF_DIGITS_LEN) {
+          validateCpfRow(row);
+        } else {
+          setDocumentoInvalidState(row, "CPF", false);
+        }
+        setDocumentoInvalidState(row, "CNH", false);
+      } else if (isCnhTipoDocumento(select.value)) {
+        const digits = normalizeCnhRow(row);
+        if (digits.length === CNH_DIGITS_LEN) {
+          validateCnhRow(row);
+        } else {
+          setDocumentoInvalidState(row, "CNH", false);
+        }
+        setDocumentoInvalidState(row, "CPF", false);
       }
     });
     numeroInput.addEventListener("blur", () => {
       if (isCpfTipoDocumento(select.value)) {
         validateCpfRow(row, true);
+      } else if (isCnhTipoDocumento(select.value)) {
+        validateCnhRow(row, true);
       }
       verificarDocumentoExistente(row);
     });
@@ -529,6 +614,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const tipoDocumento = row.querySelector(".tipo-documento").value;
       if (isCpfTipoDocumento(tipoDocumento) && !validateCpfRow(row, true)) {
         await showMessage("CPF invalido.");
+        return;
+      }
+      if (isCnhTipoDocumento(tipoDocumento) && !validateCnhRow(row, true)) {
+        await showMessage("CNH invalida.");
         return;
       }
     }

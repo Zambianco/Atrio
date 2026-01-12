@@ -5,6 +5,7 @@ from rest_framework import serializers
 from .models import Pessoa, Documento, TipoDocumento
 
 CPF_DIGITS_LEN = 11
+CNH_DIGITS_LEN = 11
 
 
 def normalize_digits(value):
@@ -29,6 +30,23 @@ def is_valid_cpf(digits):
     if check == 10:
         check = 0
     return check == int(digits[10])
+
+
+def is_valid_cnh(digits):
+    if len(digits) != CNH_DIGITS_LEN:
+        return False
+
+    total = sum(int(d) * weight for d, weight in zip(digits[:9], range(9, 0, -1)))
+    mod = total % 11
+    first_check = 0 if mod >= 10 else mod
+    desc = 2 if mod >= 10 else 0
+
+    total = sum(int(d) * weight for d, weight in zip(digits[:9], range(1, 10)))
+    total += desc
+    mod = total % 11
+    second_check = 0 if mod >= 10 else mod
+
+    return first_check == int(digits[9]) and second_check == int(digits[10])
 
 class PessoaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,6 +75,13 @@ class DocumentoSerializer(serializers.ModelSerializer):
                 digits = normalize_digits(numero)
                 if not is_valid_cpf(digits):
                     raise serializers.ValidationError({"numero": "CPF invalido."})
+                numero = digits
+                if numero_provided:
+                    attrs["numero"] = numero
+            elif tipo_documento.nome.upper() == "CNH":
+                digits = normalize_digits(numero)
+                if not is_valid_cnh(digits):
+                    raise serializers.ValidationError({"numero": "CNH invalida."})
                 numero = digits
                 if numero_provided:
                     attrs["numero"] = numero
