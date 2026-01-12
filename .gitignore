@@ -50,7 +50,8 @@ staticfiles/
 # Arquivos do projeto
 tree.txt  # Se não quiser versionar o tree
 .env
-
+anotações.txt
 # System files
 .DS_Store
 Thumbs.db
+

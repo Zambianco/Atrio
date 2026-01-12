@@ -202,27 +202,69 @@ document.addEventListener("DOMContentLoaded", () => {
     return valid;
   };
 
+  const setEmissorDefault = (row, tipoNome) => {
+    const emissorInput = row.querySelector(".emissor-documento");
+    if (!emissorInput) return;
+    if (tipoNome === "CPF") emissorInput.value = "RFB";
+    if (tipoNome === "CNH") emissorInput.value = "DETRAN";
+  };
+
+  const setEmissorLocked = (row, locked) => {
+    const emissorInput = row.querySelector(".emissor-documento");
+    if (!emissorInput) return;
+    emissorInput.readOnly = locked;
+  };
+
+  const setValidadeVisibility = (row, hidden) => {
+    const validadeInput = row.querySelector(".validade-documento");
+    if (!validadeInput) return;
+    const field = validadeInput.closest(".col-md-6") || validadeInput.parentElement;
+    if (!field) return;
+    field.classList.toggle("d-none", hidden);
+    if (hidden) validadeInput.value = "";
+  };
+
   const applyDocumentoMode = (row) => {
     const select = row.querySelector(".tipo-documento");
     const numeroInput = row.querySelector(".numero-documento");
-    const isCpf = isCpfTipoDocumento(select.value);
-    const isCnh = isCnhTipoDocumento(select.value);
+    const tipoNome = getTipoDocumentoNome(select.value).toUpperCase();
+    const isCpf = tipoNome === "CPF";
+    const isCnh = tipoNome === "CNH";
+    const prevTipoNome = (row.dataset.tipoDocumentoNome || "").toUpperCase();
+    const mudouEntreCpfCnh =
+      (prevTipoNome === "CPF" || prevTipoNome === "CNH") &&
+      (tipoNome === "CPF" || tipoNome === "CNH") &&
+      prevTipoNome !== tipoNome;
+    const emissorInput = row.querySelector(".emissor-documento");
+    if (mudouEntreCpfCnh && emissorInput) emissorInput.value = "";
     if (isCpf) {
       numeroInput.maxLength = 14;
       numeroInput.setAttribute("inputmode", "numeric");
       formatCpfRow(row);
       setDocumentoInvalidState(row, "CNH", false);
+      setEmissorDefault(row, "CPF");
+      setEmissorLocked(row, true);
+      setValidadeVisibility(row, true);
     } else if (isCnh) {
       numeroInput.maxLength = 11;
       numeroInput.setAttribute("inputmode", "numeric");
       normalizeCnhRow(row);
       setDocumentoInvalidState(row, "CPF", false);
+      setEmissorDefault(row, "CNH");
+      setEmissorLocked(row, true);
+      setValidadeVisibility(row, false);
     } else {
       numeroInput.maxLength = 100;
       numeroInput.removeAttribute("inputmode");
       setDocumentoInvalidState(row, "CPF", false);
       setDocumentoInvalidState(row, "CNH", false);
+      setEmissorLocked(row, false);
+      const emissorInput = row.querySelector(".emissor-documento");
+      if (emissorInput) emissorInput.value = "";
+      setValidadeVisibility(row, false);
     }
+
+    row.dataset.tipoDocumentoNome = tipoNome;
   };
 
   const getNumeroDocumentoValue = (row) => {
