@@ -4,7 +4,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 from .models import Pessoa, Documento, TipoDocumento
-from .serializers import PessoaSerializer, DocumentoSerializer, TipoDocumentoSerializer
+from .serializers import (
+    PessoaSerializer,
+    DocumentoSerializer,
+    TipoDocumentoSerializer,
+    normalize_digits,
+)
 
 
 class PessoaViewSet(viewsets.ModelViewSet):
@@ -82,6 +87,14 @@ class DocumentoViewSet(viewsets.ModelViewSet):
 
         if not tipo_documento or not numero:
             return Response({"exists": False})
+
+        tipo_nome = (
+            TipoDocumento.objects.filter(id=tipo_documento)
+            .values_list("nome", flat=True)
+            .first()
+        )
+        if tipo_nome and tipo_nome.upper() == "CPF":
+            numero = normalize_digits(numero)
 
         queryset = Documento.objects.filter(
             tipo_documento_id=tipo_documento,

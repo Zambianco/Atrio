@@ -55,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let tiposDocumento = [];
   let pessoaEmEdicao = null;
   let documentosRemovidos = [];
+  const CPF_DIGITS_LEN = 11;
 
   const showMessage = (message) => {
     if (window.showAlert) return window.showAlert(message);
@@ -65,6 +66,102 @@ document.addEventListener("DOMContentLoaded", () => {
   const normalize = (value) => {
     const trimmed = value.trim();
     return trimmed ? trimmed : null;
+  };
+
+  const onlyDigits = (value) => value.replace(/\D/g, "");
+
+  const formatCPF = (digits) => {
+    const slice = digits.slice(0, CPF_DIGITS_LEN);
+    const part1 = slice.slice(0, 3);
+    const part2 = slice.slice(3, 6);
+    const part3 = slice.slice(6, 9);
+    const part4 = slice.slice(9, 11);
+    let formatted = part1;
+    if (part2) formatted += `.${part2}`;
+    if (part3) formatted += `.${part3}`;
+    if (part4) formatted += `-${part4}`;
+    return formatted;
+  };
+
+  const isValidCPF = (digits) => {
+    if (digits.length !== CPF_DIGITS_LEN) return false;
+    if (/^(\d)\1{10}$/.test(digits)) return false;
+    let total = 0;
+    for (let i = 0; i < 9; i++) {
+      total += parseInt(digits[i], 10) * (10 - i);
+    }
+    let check = (total * 10) % 11;
+    if (check === 10) check = 0;
+    if (check !== parseInt(digits[9], 10)) return false;
+    total = 0;
+    for (let i = 0; i < 10; i++) {
+      total += parseInt(digits[i], 10) * (11 - i);
+    }
+    check = (total * 10) % 11;
+    if (check === 10) check = 0;
+    return check === parseInt(digits[10], 10);
+  };
+
+  const getTipoDocumentoNome = (tipoId) => {
+    const tipo = tiposDocumento.find((item) => String(item.id) === String(tipoId));
+    return tipo?.nome || "";
+  };
+
+  const isCpfTipoDocumento = (tipoId) => {
+    return getTipoDocumentoNome(tipoId).toUpperCase() === "CPF";
+  };
+
+  const setCpfInvalidState = (row, invalid) => {
+    const aviso = row.querySelector(".cpf-invalido");
+    const numeroInput = row.querySelector(".numero-documento");
+    if (!numeroInput) return;
+    if (aviso) aviso.classList.toggle("d-none", !invalid);
+    numeroInput.classList.toggle("is-invalid", invalid);
+  };
+
+  const formatCpfRow = (row) => {
+    const numeroInput = row.querySelector(".numero-documento");
+    const digits = onlyDigits(numeroInput.value).slice(0, CPF_DIGITS_LEN);
+    numeroInput.value = formatCPF(digits);
+    return digits;
+  };
+
+  const validateCpfRow = (row, showIncomplete = false) => {
+    const numeroInput = row.querySelector(".numero-documento");
+    const digits = onlyDigits(numeroInput.value);
+    if (!digits) {
+      setCpfInvalidState(row, false);
+      return true;
+    }
+    if (digits.length !== CPF_DIGITS_LEN) {
+      setCpfInvalidState(row, showIncomplete);
+      return !showIncomplete;
+    }
+    const valid = isValidCPF(digits);
+    setCpfInvalidState(row, !valid);
+    return valid;
+  };
+
+  const applyCpfMode = (row) => {
+    const select = row.querySelector(".tipo-documento");
+    const numeroInput = row.querySelector(".numero-documento");
+    const isCpf = isCpfTipoDocumento(select.value);
+    if (isCpf) {
+      numeroInput.maxLength = 14;
+      numeroInput.setAttribute("inputmode", "numeric");
+      formatCpfRow(row);
+    } else {
+      numeroInput.maxLength = 100;
+      numeroInput.removeAttribute("inputmode");
+      setCpfInvalidState(row, false);
+    }
+  };
+
+  const getNumeroDocumentoValue = (row) => {
+    const tipoId = row.querySelector(".tipo-documento").value;
+    const numeroInput = row.querySelector(".numero-documento");
+    const raw = numeroInput.value.trim();
+    return isCpfTipoDocumento(tipoId) ? onlyDigits(raw) : raw;
   };
 
   const setModoEdicao = (pessoa) => {
@@ -110,6 +207,9 @@ document.addEventListener("DOMContentLoaded", () => {
       documentosContainer
         .querySelectorAll(".tipo-documento")
         .forEach((select) => montarSelectTipos(select));
+      documentosContainer
+        .querySelectorAll(".documento-row")
+        .forEach((row) => applyCpfMode(row));
     } catch (err) {
       console.error(err);
     }
@@ -122,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const docId = row.dataset.docId || "";
 
     const tipoId = tipoSelect.value;
-    const numero = numeroInput.value.trim();
+    const numero = getNumeroDocumentoValue(row);
 
     if (!tipoId || !numero) {
       aviso.classList.add("d-none");
@@ -191,8 +291,22 @@ document.addEventListener("DOMContentLoaded", () => {
       observacaoInput.value = documento.observacao || "";
     }
 
-    select.addEventListener("change", () => verificarDocumentoExistente(row));
-    numeroInput.addEventListener("blur", () => verificarDocumentoExistente(row));
+    select.addEventListener("change", () => {
+      applyCpfMode(row);
+      verificarDocumentoExistente(row);
+    });
+    numeroInput.addEventListener("input", () => {
+      if (isCpfTipoDocumento(select.value)) {
+        formatCpfRow(row);
+        setCpfInvalidState(row, false);
+      }
+    });
+    numeroInput.addEventListener("blur", () => {
+      if (isCpfTipoDocumento(select.value)) {
+        validateCpfRow(row, true);
+      }
+      verificarDocumentoExistente(row);
+    });
 
     removerBtn.addEventListener("click", () => {
       const docId = row.dataset.docId;
@@ -377,7 +491,7 @@ document.addEventListener("DOMContentLoaded", () => {
     )
       .map((row) => {
         const tipoDocumento = row.querySelector(".tipo-documento").value;
-        const numeroDocumento = row.querySelector(".numero-documento").value;
+        const numeroDocumento = getNumeroDocumentoValue(row);
         const emissorDocumento = row.querySelector(".emissor-documento").value;
         const validadeDocumento = row.querySelector(".validade-documento").value;
         const observacaoDocumento =
@@ -407,6 +521,14 @@ document.addEventListener("DOMContentLoaded", () => {
         await showMessage(
           "Preencha tipo e numero em todos os documentos adicionados."
         );
+        return;
+      }
+    }
+
+    for (const row of documentosContainer.querySelectorAll(".documento-row")) {
+      const tipoDocumento = row.querySelector(".tipo-documento").value;
+      if (isCpfTipoDocumento(tipoDocumento) && !validateCpfRow(row, true)) {
+        await showMessage("CPF invalido.");
         return;
       }
     }
