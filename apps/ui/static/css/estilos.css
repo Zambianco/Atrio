@@ -267,3 +267,26 @@
   font-size: 0.85rem;
   cursor: pointer;
 }
+
+/* ===== AUTOCOMPLETE INLINE (NOVA VISITA) ===== */
+.table-responsive-inline {
+  overflow: visible;
+}
+
+.autocomplete-wrap {
+  position: relative;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.autocomplete-list .list-group-item {
+  white-space: normal;
+}

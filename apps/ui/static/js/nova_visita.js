@@ -11,6 +11,11 @@ const DRAFT_KEY = 'nova_visita_draft_v1';
 // Tempo (ms) para exibir o badge de rascunho carregado
 const DRAFT_DISPLAY_MS = 5000;
 let draftBadgeTimeout = null;
+const MIN_SEARCH_CHARS = 3;
+
+function ensureArray(value) {
+  return Array.isArray(value) ? value : [];
+}
 
 function salvarDraft() {
   if (isModoGerenciamento()) return;
@@ -48,20 +53,8 @@ function carregarDraft() {
     if (responsavelEl && draft.responsavel) responsavelEl.value = draft.responsavel;
     if (observacaoEl && draft.observacao) observacaoEl.value = draft.observacao;
 
-    pessoasAdicionadas = draft.pessoas || [];
-    veiculosAdicionados = draft.veiculos || [];
-
-    // Se havia conteúdo, restaurar o estado de "visita em criação"
-    if ((draft.grupoVisita) || (pessoasAdicionadas.length > 0) || (veiculosAdicionados.length > 0)) {
-      // Tentar criar o grupo localmente (reaproveita a lógica de UI)
-      const motivo = motivoEl ? motivoEl.value.trim() : '';
-      const autorizado = responsavelEl ? responsavelEl.value.trim() : '';
-      if (draft.grupoVisita || (motivo && autorizado)) {
-        // criarVisitaLocal usa os campos atuais, então basta chamá-la
-        criarVisitaLocal();
-      }
-    }
-
+    pessoasAdicionadas = ensureArray(draft.pessoas);
+    veiculosAdicionados = ensureArray(draft.veiculos);
     atualizarTabelaPessoas();
     atualizarTabelaVeiculos();
     atualizarEstadoBotaoRegistrar();
@@ -275,28 +268,253 @@ function adicionarVeiculoATabela(veiculo) {
   salvarDraft();
 }
 
-// Atualizar tabela de pessoas (apenas para nova visita)
+function renderPessoaInputRow() {
+  return `
+    <tr>
+      <td colspan="4">
+        <div class="autocomplete-wrap">
+          <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
+          <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function renderVeiculoInputRow() {
+  return `
+    <tr>
+      <td colspan="4">
+        <div class="autocomplete-wrap">
+          <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
+          <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function bindPessoaInlineSearch() {
+  const input = document.getElementById("pessoaSearchInput");
+  const lista = document.getElementById("pessoaSuggestions");
+  if (!input || !lista || input.dataset._boundInline) return;
+
+  input.dataset._boundInline = "1";
+  lista.dataset._boundInline = "1";
+  input._lastPessoas = [];
+
+  const handleInput = async (e) => {
+    const query = e.target.value.trim();
+    if (query.length < MIN_SEARCH_CHARS) {
+      lista.innerHTML = "";
+      return;
+    }
+    const pessoas = await buscarPessoas(query);
+    input._lastPessoas = pessoas;
+
+    if (!pessoas.length) {
+      lista.innerHTML = '<div class="list-group-item text-center text-muted">Nenhuma pessoa encontrada</div>';
+      return;
+    }
+
+    lista.innerHTML = pessoas.map((pessoa) => `
+      <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${pessoa.id}">
+        <span>${pessoa.nome || pessoa.nome_completo || 'Sem nome'}</span>
+        <small class="text-muted">${pessoa.empresa || pessoa.empresa_nome || 'Sem empresa'}</small>
+      </button>
+    `).join('');
+  };
+
+  input.addEventListener("input", handleInput);
+  input.addEventListener("keyup", handleInput);
+
+  const handleSelect = (e) => {
+    const btn = e.target.closest("[data-id]");
+    if (!btn) return;
+    if (e.type === "pointerdown") e.preventDefault();
+    const pessoaId = btn.dataset.id;
+    const pessoa = (input._lastPessoas || []).find(p => String(p.id) === String(pessoaId));
+    if (pessoa) {
+      adicionarPessoaATabela(pessoa);
+      input.value = "";
+      lista.innerHTML = "";
+      input.focus();
+    }
+  };
+
+  lista.addEventListener("click", handleSelect);
+  lista.addEventListener("pointerdown", handleSelect);
+}
+function bindVeiculoInlineSearch() {
+  const input = document.getElementById("veiculoSearchInput");
+  const lista = document.getElementById("veiculoSuggestions");
+  if (!input || !lista || input.dataset._boundInline) return;
+
+  input.dataset._boundInline = "1";
+  lista.dataset._boundInline = "1";
+  input._lastVeiculos = [];
+
+  const handleInput = async (e) => {
+    const query = e.target.value.trim();
+    if (query.length < MIN_SEARCH_CHARS) {
+      lista.innerHTML = "";
+      return;
+    }
+    const veiculos = await buscarVeiculos(query);
+    input._lastVeiculos = veiculos;
+
+    if (!veiculos.length) {
+      lista.innerHTML = '<div class="list-group-item text-center text-muted">Nenhum veiculo encontrado</div>';
+      return;
+    }
+
+    lista.innerHTML = veiculos.map((veiculo) => `
+      <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${veiculo.id}">
+        <span>${veiculo.placa || 'Sem placa'}</span>
+        <small class="text-muted">${veiculo.modelo || veiculo.marca || 'Modelo nao informado'}</small>
+      </button>
+    `).join('');
+  };
+
+  input.addEventListener("input", handleInput);
+  input.addEventListener("keyup", handleInput);
+
+  const handleSelect = (e) => {
+    const btn = e.target.closest("[data-id]");
+    if (!btn) return;
+    if (e.type === "pointerdown") e.preventDefault();
+    const veiculoId = btn.dataset.id;
+    const veiculo = (input._lastVeiculos || []).find(v => String(v.id) === String(veiculoId));
+    if (veiculo) {
+      adicionarVeiculoATabela(veiculo);
+      input.value = "";
+      lista.innerHTML = "";
+      input.focus();
+    }
+  };
+
+  lista.addEventListener("click", handleSelect);
+  lista.addEventListener("pointerdown", handleSelect);
+}
+
+function setupInlineAutocompleteDelegation() {
+  if (window._inlineAutocompleteDelegated) return;
+  window._inlineAutocompleteDelegated = true;
+
+  document.addEventListener("input", async (e) => {
+    const target = e.target;
+    if (!target || !target.id) return;
+    if (target.dataset && target.dataset._boundInline === "1") return;
+
+    if (target.id === "pessoaSearchInput") {
+      const lista = document.getElementById("pessoaSuggestions");
+      if (!lista) return;
+      const query = target.value.trim();
+      if (query.length < MIN_SEARCH_CHARS) {
+        lista.innerHTML = "";
+        return;
+      }
+
+      const pessoas = await buscarPessoas(query);
+      target._lastPessoas = pessoas;
+
+      if (!pessoas.length) {
+        lista.innerHTML = '<div class="list-group-item text-center text-muted">Nenhuma pessoa encontrada</div>';
+        return;
+      }
+
+      lista.innerHTML = pessoas.map((pessoa) => `
+        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${pessoa.id}">
+          <span>${pessoa.nome || pessoa.nome_completo || "Sem nome"}</span>
+          <small class="text-muted">${pessoa.empresa || pessoa.empresa_nome || "Sem empresa"}</small>
+        </button>
+      `).join("");
+      return;
+    }
+
+    if (target.id === "veiculoSearchInput") {
+      const lista = document.getElementById("veiculoSuggestions");
+      if (!lista) return;
+      const query = target.value.trim();
+      if (query.length < MIN_SEARCH_CHARS) {
+        lista.innerHTML = "";
+        return;
+      }
+
+      const veiculos = await buscarVeiculos(query);
+      target._lastVeiculos = veiculos;
+
+      if (!veiculos.length) {
+        lista.innerHTML = '<div class="list-group-item text-center text-muted">Nenhum veiculo encontrado</div>';
+        return;
+      }
+
+      lista.innerHTML = veiculos.map((veiculo) => `
+        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${veiculo.id}">
+          <span>${veiculo.placa || "Sem placa"}</span>
+          <small class="text-muted">${veiculo.modelo || veiculo.marca || "Modelo nao informado"}</small>
+        </button>
+      `).join("");
+    }
+  });
+
+  const handleSelect = (e) => {
+    const btn = e.target.closest("[data-id]");
+    if (!btn) return;
+    const lista = btn.closest("#pessoaSuggestions, #veiculoSuggestions");
+    if (!lista || lista.dataset._boundInline === "1") return;
+    if (e.type === "pointerdown") e.preventDefault();
+
+    if (lista.id === "pessoaSuggestions") {
+      const input = document.getElementById("pessoaSearchInput");
+      const pessoaId = btn.dataset.id;
+      const pessoa = (input && input._lastPessoas || []).find(p => String(p.id) === String(pessoaId));
+      if (pessoa) {
+        adicionarPessoaATabela(pessoa);
+        if (input) {
+          input.value = "";
+          input.focus();
+        }
+        lista.innerHTML = "";
+      }
+      return;
+    }
+
+    if (lista.id === "veiculoSuggestions") {
+      const input = document.getElementById("veiculoSearchInput");
+      const veiculoId = btn.dataset.id;
+      const veiculo = (input && input._lastVeiculos || []).find(v => String(v.id) === String(veiculoId));
+      if (veiculo) {
+        adicionarVeiculoATabela(veiculo);
+        if (input) {
+          input.value = "";
+          input.focus();
+        }
+        lista.innerHTML = "";
+      }
+    }
+  };
+
+  document.addEventListener("click", handleSelect);
+  document.addEventListener("pointerdown", handleSelect);
+}
+
+function atualizarEstadoBotaoRegistrar() {
+  if (isModoGerenciamento()) return;
+  const btnRegistrar = document.getElementById("btnRegistrar");
+  if (!btnRegistrar) return;
+  const temPessoas = ensureArray(pessoasAdicionadas).length > 0;
+  btnRegistrar.disabled = !temPessoas;
+}
+
 function atualizarTabelaPessoas() {
   if (isModoGerenciamento()) return;
-  
-  const tbPessoas = document.getElementById("tbPessoas");
-  const cardPessoas = document.getElementById("cardPessoas");
-  
-  if (!tbPessoas) return;
-  
-  if (pessoasAdicionadas.length === 0) {
-    tbPessoas.innerHTML = `
-      <tr>
-        <td colspan="4" class="text-center text-muted py-4">
-          <i class="bi bi-people me-1"></i>Nenhuma pessoa adicionada
-        </td>
-      </tr>
-    `;
-    if (cardPessoas) cardPessoas.classList.add("d-none");
-    return;
-  }
 
-  tbPessoas.innerHTML = pessoasAdicionadas.map((pessoa, index) => `
+  const tbPessoas = document.getElementById("tbPessoas");
+  if (!tbPessoas) return;
+
+  pessoasAdicionadas = ensureArray(pessoasAdicionadas);
+  const rows = pessoasAdicionadas.map((pessoa, index) => `
     <tr data-id="${pessoa.id}">
       <td>${pessoa.nome || pessoa.nome_completo || 'N/A'}</td>
       <td>${pessoa.empresa || pessoa.empresa_nome || 'N/A'}</td>
@@ -307,9 +525,11 @@ function atualizarTabelaPessoas() {
         </button>
       </td>
     </tr>
-  `).join('');
+  `);
 
-  // Adicionar eventos aos bot+Áes de remover
+  rows.push(renderPessoaInputRow());
+  tbPessoas.innerHTML = rows.join('');
+
   document.querySelectorAll('.btnRemoverPessoa').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const index = parseInt(e.target.closest('button').dataset.index);
@@ -320,31 +540,17 @@ function atualizarTabelaPessoas() {
     });
   });
 
-  if (cardPessoas) cardPessoas.classList.remove("d-none");
+  bindPessoaInlineSearch();
 }
 
-// Atualizar tabela de ve+¡culos (apenas para nova visita)
 function atualizarTabelaVeiculos() {
   if (isModoGerenciamento()) return;
-  
-  const tbVeiculos = document.getElementById("tbVeiculos");
-  const cardVeiculos = document.getElementById("cardVeiculos");
-  
-  if (!tbVeiculos) return;
-  
-  if (veiculosAdicionados.length === 0) {
-    tbVeiculos.innerHTML = `
-      <tr>
-        <td colspan="4" class="text-center text-muted py-4">
-          <i class="bi bi-car-front me-1"></i>Nenhum ve+¡culo adicionado
-        </td>
-      </tr>
-    `;
-    if (cardVeiculos) cardVeiculos.classList.add("d-none");
-    return;
-  }
 
-  tbVeiculos.innerHTML = veiculosAdicionados.map((veiculo, index) => `
+  const tbVeiculos = document.getElementById("tbVeiculos");
+  if (!tbVeiculos) return;
+
+  veiculosAdicionados = ensureArray(veiculosAdicionados);
+  const rows = veiculosAdicionados.map((veiculo, index) => `
     <tr data-id="${veiculo.id}">
       <td>${veiculo.placa || 'N/A'}</td>
       <td>${veiculo.modelo || veiculo.marca || 'N/A'}</td>
@@ -355,7 +561,10 @@ function atualizarTabelaVeiculos() {
         </button>
       </td>
     </tr>
-  `).join('');
+  `);
+
+  rows.push(renderVeiculoInputRow());
+  tbVeiculos.innerHTML = rows.join('');
 
   document.querySelectorAll('.btnRemoverVeiculo').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -366,68 +575,8 @@ function atualizarTabelaVeiculos() {
     });
   });
 
-  if (cardVeiculos) cardVeiculos.classList.remove("d-none");
+  bindVeiculoInlineSearch();
 }
-
-// Atualizar estado do bot+úo Registrar (apenas para nova visita)
-function atualizarEstadoBotaoRegistrar() {
-  if (isModoGerenciamento()) return;
-  
-  const btnRegistrar = document.getElementById("btnRegistrar");
-  if (btnRegistrar) {
-    btnRegistrar.disabled = pessoasAdicionadas.length === 0;
-  }
-}
-
-// CRIAR VISITA (apenas para nova visita)
-function criarVisitaLocal() {
-  if (isModoGerenciamento()) return false;
-  
-  const motivoInput = document.getElementById("motivo");
-  const responsavelInput = document.getElementById("responsavel");
-  const btnCriar = document.getElementById("btnCriarCancelar");
-  
-  if (!motivoInput || !responsavelInput || !btnCriar) return false;
-
-  const motivo = motivoInput.value.trim();
-  const autorizado = responsavelInput.value.trim();
-
-  if (!motivo || !autorizado) {
-    alert("Informe o motivo e o respons+ível");
-    return false;
-  }
-
-  grupoVisita = {
-    motivo: motivo,
-    autorizado_por: autorizado,
-    data_criacao: new Date(),
-    pessoas: [],
-    veiculos: []
-  };
-
-  const badge = document.getElementById("badgeGrupo");
-  if (badge) {
-    badge.textContent = `Visita em cria+º+úo`;
-    badge.classList.remove("d-none");
-  }
-
-  const acoesDiv = document.getElementById("acoes");
-  const cardObservacoes = document.getElementById("cardObservacoes");
-  if (acoesDiv) acoesDiv.classList.remove("d-none");
-  if (cardObservacoes) cardObservacoes.classList.remove("d-none");
-
-  motivoInput.disabled = true;
-  responsavelInput.disabled = true;
-
-  btnCriar.innerHTML = '<i class="bi bi-x-circle me-1"></i>Cancelar Visita';
-  btnCriar.classList.remove("btn-primary");
-  btnCriar.classList.add("btn-danger");
-
-  salvarDraft();
-
-  return true;
-}
-
 // CANCELAR VISITA (apenas para nova visita)
 async function cancelarVisita() {
   if (isModoGerenciamento()) return;
@@ -443,32 +592,13 @@ async function cancelarVisita() {
 
     atualizarTabelaPessoas();
     atualizarTabelaVeiculos();
-
-    const badge = document.getElementById("badgeGrupo");
-    const acoesDiv = document.getElementById("acoes");
-    const cardPessoas = document.getElementById("cardPessoas");
-    const cardVeiculos = document.getElementById("cardVeiculos");
-    const cardObservacoes = document.getElementById("cardObservacoes");
     const motivoInput = document.getElementById("motivo");
     const responsavelInput = document.getElementById("responsavel");
     const observacaoInput = document.getElementById("observacao");
-    const btnCriar = document.getElementById("btnCriarCancelar");
     const btnRegistrar = document.getElementById("btnRegistrar");
-    
-    if (badge) badge.classList.add("d-none");
-    if (acoesDiv) acoesDiv.classList.add("d-none");
-    if (cardPessoas) cardPessoas.classList.add("d-none");
-    if (cardVeiculos) cardVeiculos.classList.add("d-none");
-    if (cardObservacoes) cardObservacoes.classList.add("d-none");
 
     if (motivoInput) motivoInput.disabled = false;
     if (responsavelInput) responsavelInput.disabled = false;
-
-    if (btnCriar) {
-      btnCriar.innerHTML = '<i class="bi bi-plus-circle me-1"></i>Criar visita';
-      btnCriar.classList.remove("btn-danger");
-      btnCriar.classList.add("btn-primary");
-    }
 
     if (btnRegistrar) btnRegistrar.disabled = true;
     // Limpar valores dos inputs básicos
@@ -667,8 +797,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("Modo inicializado:", { modoGerenciamento, visitaExistenteId });
 
+  const cardVeiculos = document.getElementById("cardVeiculos");
+  const cardPessoas = document.getElementById("cardPessoas");
+  if (cardVeiculos) cardVeiculos.classList.remove("d-none");
+  if (cardPessoas) cardPessoas.classList.remove("d-none");
+
   // Elementos principais (apenas para nova visita)
-  const btnCriar = document.getElementById("btnCriarCancelar");
   const btnRegistrar = document.getElementById("btnRegistrar");
   const btnAddPessoa = document.getElementById("btnAddPessoa");
   const btnAddVeiculo = document.getElementById("btnAddVeiculo");
@@ -681,6 +815,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Carregar rascunho salvo (se existir)
   carregarDraft();
+
+  if (!isModoGerenciamento()) {
+    bindPessoaInlineSearch();
+    bindVeiculoInlineSearch();
+  }
+
+  if (!isModoGerenciamento()) {
+    atualizarTabelaPessoas();
+    atualizarTabelaVeiculos();
+    atualizarEstadoBotaoRegistrar();
+    setupInlineAutocompleteDelegation();
+  }
 
   // Salvar rascunho ao editar campos básicos
   if (motivoInput) motivoInput.addEventListener('input', salvarDraft);
@@ -702,18 +848,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // S+¦ adicionar eventos se n+úo estiver em modo gerenciamento
   if (!isModoGerenciamento()) {
     // Event Listeners para nova visita
-    if (btnCriar) {
-      // Handler estável: decide ação com base na classe do botão
-      btnCriar.addEventListener('click', () => {
-        if (btnCriar.classList.contains('btn-danger')) {
-          cancelarVisita();
-        } else {
-          criarVisitaLocal();
-        }
-      });
+    const btnCancelarVisita = document.getElementById("btnCancelarVisita");
+    if (btnCancelarVisita) {
+      btnCancelarVisita.addEventListener("click", cancelarVisita);
     }
 
-    // Bot+úo Adicionar Pessoa
+    // Botao Adicionar Pessoa
     if (btnAddPessoa) {
       btnAddPessoa.addEventListener("click", mostrarBuscaPessoa);
     }
@@ -727,7 +867,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (buscaPessoaInput) {
       buscaPessoaInput.addEventListener("input", async (e) => {
         const query = e.target.value.trim();
-        if (query.length < 2) {
+        if (query.length < MIN_SEARCH_CHARS) {
           if (listaSugestoesPessoa) listaSugestoesPessoa.innerHTML = "";
           return;
         }
@@ -774,7 +914,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (buscaVeiculoInput) {
       buscaVeiculoInput.addEventListener("input", async (e) => {
         const query = e.target.value.trim();
-        if (query.length < 2) {
+        if (query.length < MIN_SEARCH_CHARS) {
           if (listaSugestoesVeiculo) listaSugestoesVeiculo.innerHTML = "";
           return;
         }
@@ -821,7 +961,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnBuscarPessoa) {
       btnBuscarPessoa.addEventListener("click", () => {
         const query = buscaPessoaInput ? buscaPessoaInput.value.trim() : '';
-        if (query.length >= 2 && buscaPessoaInput) {
+        if (query.length >= MIN_SEARCH_CHARS && buscaPessoaInput) {
           buscaPessoaInput.dispatchEvent(new Event('input'));
         }
       });
@@ -831,7 +971,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnBuscarVeiculo) {
       btnBuscarVeiculo.addEventListener("click", () => {
         const query = buscaVeiculoInput ? buscaVeiculoInput.value.trim() : '';
-        if (query.length >= 2 && buscaVeiculoInput) {
+        if (query.length >= MIN_SEARCH_CHARS && buscaVeiculoInput) {
           buscaVeiculoInput.dispatchEvent(new Event('input'));
         }
       });
