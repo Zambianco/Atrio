@@ -193,10 +193,91 @@ window.apiRequest = async function(url, options = {}) {
   }
 };
 
+function stripFieldTooltipAttributes(root) {
+  const fieldSelector = 'input, select, textarea';
+  const fields = [];
+
+  if (!root) return;
+  if (root.matches && root.matches(fieldSelector)) fields.push(root);
+  if (root.querySelectorAll) {
+    root.querySelectorAll(fieldSelector).forEach((el) => fields.push(el));
+  }
+
+  fields.forEach((el) => {
+    if (el.hasAttribute('title')) el.removeAttribute('title');
+
+    const dataBsToggle = el.getAttribute('data-bs-toggle');
+    if (dataBsToggle && dataBsToggle.toLowerCase() === 'tooltip') el.removeAttribute('data-bs-toggle');
+
+    const dataToggle = el.getAttribute('data-toggle');
+    if (dataToggle && dataToggle.toLowerCase() === 'tooltip') el.removeAttribute('data-toggle');
+
+    if (el.hasAttribute('data-bs-original-title')) el.removeAttribute('data-bs-original-title');
+    if (el.hasAttribute('data-original-title')) el.removeAttribute('data-original-title');
+    if (el.hasAttribute('data-bs-title')) el.removeAttribute('data-bs-title');
+    if (el.hasAttribute('data-title')) el.removeAttribute('data-title');
+
+    if (window.bootstrap && typeof bootstrap.Tooltip === 'function' && typeof bootstrap.Tooltip.getInstance === 'function') {
+      const instance = bootstrap.Tooltip.getInstance(el);
+      if (instance) instance.dispose();
+    }
+
+    if (window.jQuery && jQuery.fn && typeof jQuery.fn.tooltip === 'function') {
+      try {
+        jQuery(el).tooltip('dispose');
+      } catch (error) {
+        // ignore tooltip cleanup failures
+      }
+    }
+  });
+}
+
 // Inicializar tooltips do Bootstrap
 document.addEventListener('DOMContentLoaded', function() {
-  const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  tooltipTriggerList.map(function(tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl);
+  const fieldSelector = 'input, select, textarea';
+  stripFieldTooltipAttributes(document);
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes') {
+        if (mutation.target && mutation.target.matches && mutation.target.matches(fieldSelector)) {
+          stripFieldTooltipAttributes(mutation.target);
+        }
+        return;
+      }
+
+      if (mutation.type === 'childList') {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType !== 1) return;
+          stripFieldTooltipAttributes(node);
+        });
+      }
+    });
   });
+
+  if (document.body) {
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: [
+        'title',
+        'data-bs-toggle',
+        'data-toggle',
+        'data-bs-original-title',
+        'data-original-title',
+        'data-bs-title',
+        'data-title'
+      ]
+    });
+  }
+
+  if (window.bootstrap && typeof bootstrap.Tooltip === 'function') {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList
+      .filter((el) => !el.matches(fieldSelector))
+      .map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+  }
 });

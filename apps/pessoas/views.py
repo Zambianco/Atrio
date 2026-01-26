@@ -15,9 +15,32 @@ from .serializers import (
 class PessoaViewSet(viewsets.ModelViewSet):
     queryset = Pessoa.objects.all()
     serializer_class = PessoaSerializer
-    
-    
-    @action(detail=False, methods=['get'])
+
+    @action(detail=False, methods=["get"], url_path="empresas")
+    def empresas(self, request):
+        empresas_qs = (
+            self.get_queryset()
+            .exclude(empresa__isnull=True)
+            .exclude(empresa__exact="")
+            .values_list("empresa", flat=True)
+            .order_by("empresa")
+        )
+
+        empresas = []
+        vistos = set()
+        for nome in empresas_qs[:100]:
+            nome = (nome or "").strip()
+            if not nome:
+                continue
+            key = nome.lower()
+            if key in vistos:
+                continue
+            vistos.add(key)
+            empresas.append(nome)
+
+        return Response({"empresas": empresas})
+
+    @action(detail=False, methods=["get"])
     def buscar(self, request):
         query = request.GET.get('q', '').strip()
 
@@ -33,13 +56,13 @@ class PessoaViewSet(viewsets.ModelViewSet):
 
         if len(query) < 2:
             return Response({'pessoas': []})
-        
+
         # Busca por nome ou empresa
         pessoas = self.get_queryset().filter(
-            Q(nome__icontains=query) | 
+            Q(nome__icontains=query) |
             Q(empresa__icontains=query)
         )[:10]
-        
+
         serializer = self.get_serializer(pessoas, many=True)
         return Response({'pessoas': serializer.data})
 

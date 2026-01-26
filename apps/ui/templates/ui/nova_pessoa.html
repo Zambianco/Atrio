@@ -94,15 +94,19 @@
                 <label class="form-label fw-semibold">
                   Empresa
                 </label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-building"></i>
-                  </span>
-                  <input id="empresaPessoa" 
-                         class="form-control" 
-                         maxlength="200" 
-                         autocomplete="organization"
-                         placeholder="Nome da empresa">
+                <div class="autocomplete-wrap">
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="bi bi-building"></i>
+                    </span>
+                    <input id="empresaPessoa"
+                           class="form-control"
+                           maxlength="200"
+                           autocomplete="organization"
+                           placeholder="Nome da empresa">
+                    <datalist id="empresasPessoaList"></datalist>
+                  </div>
+                  <div id="empresaPessoaSuggestions" class="list-group mt-2 autocomplete-list d-none"></div>
                 </div>
               </div>
 
@@ -224,7 +228,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/nova_pessoa.js' %}"></script>
+<script src="{% static 'js/nova_pessoa.js' %}?v=20260132"></script>
 
 <!-- Template para documentos -->
 <template id="documentoTemplate">

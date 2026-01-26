@@ -11,9 +11,32 @@ from .serializers import VeiculoSerializer
 class VeiculoViewSet(ModelViewSet):
     queryset = Veiculo.objects.all()
     serializer_class = VeiculoSerializer
-    
-    
-    @action(detail=False, methods=['get'])
+
+    @action(detail=False, methods=["get"], url_path="empresas")
+    def empresas(self, request):
+        empresas_qs = (
+            self.get_queryset()
+            .exclude(empresa__isnull=True)
+            .exclude(empresa__exact="")
+            .values_list("empresa", flat=True)
+            .order_by("empresa")
+        )
+
+        empresas = []
+        vistos = set()
+        for nome in empresas_qs[:100]:
+            nome = (nome or "").strip()
+            if not nome:
+                continue
+            key = nome.lower()
+            if key in vistos:
+                continue
+            vistos.add(key)
+            empresas.append(nome)
+
+        return Response({"empresas": empresas})
+
+    @action(detail=False, methods=["get"])
     def buscar(self, request):
         query = request.GET.get('q', '').strip()
 
@@ -29,13 +52,13 @@ class VeiculoViewSet(ModelViewSet):
 
         if len(query) < 2:
             return Response({'veiculos': []})
-        
+
         # Busca por placa ou modelo
         veiculos = self.get_queryset().filter(
-            Q(placa__icontains=query) | 
+            Q(placa__icontains=query) |
             Q(modelo__icontains=query)
         )[:10]
-        
+
         serializer = self.get_serializer(veiculos, many=True)
         return Response({'veiculos': serializer.data})
 

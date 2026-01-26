@@ -108,14 +108,18 @@
                 <label class="form-label fw-semibold">
                   Empresa
                 </label>
-                <div class="input-group">
-                  <span class="input-group-text">
-                    <i class="bi bi-building"></i>
-                  </span>
-                  <input id="empresaVeiculo" 
-                         class="form-control" 
-                         maxlength="200" 
-                         placeholder="Nome da empresa">
+                <div class="autocomplete-wrap">
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="bi bi-building"></i>
+                    </span>
+                    <input id="empresaVeiculo"
+                           class="form-control"
+                           maxlength="200"
+                           placeholder="Nome da empresa">
+                    <datalist id="empresasVeiculoList"></datalist>
+                  </div>
+                  <div id="empresaVeiculoSuggestions" class="list-group mt-2 autocomplete-list d-none"></div>
                 </div>
               </div>
 
@@ -251,7 +255,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/novo_veiculo.js' %}"></script>
+<script src="{% static 'js/novo_veiculo.js' %}?v=20260132"></script>
 
 <style>
 .accordion-button:not(.collapsed) {

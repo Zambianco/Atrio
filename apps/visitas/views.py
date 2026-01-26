@@ -10,6 +10,9 @@ from django.core.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from apps.core.permissions import IsPorteiro, IsUsuario, IsAdmin
 
+from apps.pessoas.models import Pessoa
+from apps.veiculos.models import Veiculo
+
 from .models import GrupoVisita, VisitaPessoa, VisitaVeiculo
 from .serializers import (
     GrupoVisitaSerializer,
@@ -71,6 +74,82 @@ class VisitaVeiculoViewSet(viewsets.ModelViewSet):
             return Response({"erro": e.message}, status=400)
 
         return Response({"ok": True})
+
+
+class VeiculoSugestoesAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsPorteiro]
+
+    def get(self, request, veiculo_id):
+        veiculo = get_object_or_404(Veiculo, id=veiculo_id)
+        empresa = (veiculo.empresa or "").strip()
+
+        pessoas_empresa = []
+        if empresa:
+            pessoas_qs = Pessoa.objects.filter(empresa__iexact=empresa).order_by("nome")[:10]
+            pessoas_empresa = [
+                {
+                    "id": p.id,
+                    "nome": p.nome,
+                    "empresa": p.empresa,
+                }
+                for p in pessoas_qs
+            ]
+
+        visitas_veiculo = (
+            VisitaVeiculo.objects.filter(veiculo_id=veiculo_id)
+            .order_by("-data_entrada")
+            .values_list("grupo_id", flat=True)
+        )
+
+        grupos_ordenados = []
+        grupos_vistos = set()
+        for grupo_id in visitas_veiculo:
+            if grupo_id in grupos_vistos:
+                continue
+            grupos_vistos.add(grupo_id)
+            grupos_ordenados.append(grupo_id)
+            if len(grupos_ordenados) >= 5:
+                break
+
+        pessoas_ultimas = []
+        pessoas_vistas = set()
+        for grupo_id in grupos_ordenados:
+            visitas_pessoas = (
+                VisitaPessoa.objects.filter(grupo_id=grupo_id)
+                .select_related("pessoa")
+                .order_by("-data_entrada")
+            )
+            for visita_pessoa in visitas_pessoas:
+                pessoa_id = visita_pessoa.pessoa_id
+                if pessoa_id in pessoas_vistas:
+                    continue
+                pessoas_vistas.add(pessoa_id)
+                pessoas_ultimas.append(
+                    {
+                        "id": visita_pessoa.pessoa_id,
+                        "nome": visita_pessoa.pessoa.nome,
+                        "empresa": visita_pessoa.pessoa.empresa,
+                        "grupo_id": visita_pessoa.grupo_id,
+                        "entrada": visita_pessoa.data_entrada,
+                    }
+                )
+                if len(pessoas_ultimas) >= 10:
+                    break
+            if len(pessoas_ultimas) >= 10:
+                break
+
+        return Response(
+            {
+                "veiculo": {
+                    "id": veiculo.id,
+                    "placa": veiculo.placa,
+                    "empresa": veiculo.empresa,
+                    "modelo": veiculo.modelo,
+                },
+                "pessoas_empresa": pessoas_empresa,
+                "pessoas_ultimas_visitas": pessoas_ultimas,
+            }
+        )
 
 
 class PresentesAPIView(APIView):

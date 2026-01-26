@@ -21,6 +21,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnLimpar = document.getElementById("btnLimparVeiculo");
   const placa = document.getElementById("placaVeiculo");
   const empresa = document.getElementById("empresaVeiculo");
+  const listaEmpresas = document.getElementById("empresasVeiculoList");
+  const listaSugestoesEmpresa = document.getElementById("empresaVeiculoSuggestions");
   const modelo = document.getElementById("modeloVeiculo");
   const cor = document.getElementById("corVeiculo");
   const tipo = document.getElementById("tipoVeiculo");
@@ -52,6 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let veiculoEmEdicao = null;
 
+  carregarEmpresasVeiculo();
+
   const showMessage = (message) => {
     if (window.showAlert) return window.showAlert(message);
     alert(message);
@@ -62,6 +66,95 @@ document.addEventListener("DOMContentLoaded", () => {
     const trimmed = value.trim();
     return trimmed ? trimmed : null;
   };
+
+
+
+
+  function setupEmpresaSuggestions(inputEl, listEl, empresas) {
+    if (!inputEl || !listEl || listEl.dataset._bound) return;
+    listEl.dataset._bound = "1";
+
+    const nomes = empresas.map((nome) => ({
+      label: nome,
+      key: nome.toLowerCase(),
+    }));
+
+    const render = () => {
+      const query = (inputEl.value || "").trim().toLowerCase();
+      const filtered = query
+        ? nomes.filter(item => item.key.includes(query))
+        : nomes;
+
+      const matches = filtered.slice(0, 8);
+      listEl.innerHTML = "";
+      if (!matches.length) {
+        listEl.classList.add("d-none");
+        return;
+      }
+
+      matches.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "list-group-item list-group-item-action";
+        btn.dataset.value = item.label;
+        btn.textContent = item.label;
+        listEl.appendChild(btn);
+      });
+      listEl.classList.remove("d-none");
+    };
+
+    inputEl.addEventListener("input", render);
+    inputEl.addEventListener("focus", render);
+    inputEl.addEventListener("blur", () => {
+      setTimeout(() => listEl.classList.add("d-none"), 150);
+    });
+
+    listEl.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("[data-value]")) {
+        e.preventDefault();
+      }
+    });
+
+    listEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-value]");
+      if (!btn) return;
+      inputEl.value = btn.dataset.value;
+      listEl.classList.add("d-none");
+      inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+      inputEl.focus();
+    });
+  }
+
+  async function carregarEmpresasVeiculo() {
+    const lista = listaEmpresas;
+    if (!lista) return;
+
+    try {
+      const resp = await fetch("/api/veiculos/veiculos/empresas/", {
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+
+      if (!resp.ok) {
+        console.error("Status:", resp.status, "URL:", resp.url);
+        return;
+      }
+
+      const data = await resp.json();
+      const empresas = Array.isArray(data.empresas) ? data.empresas : [];
+
+      lista.innerHTML = "";
+      empresas.forEach((nome) => {
+        const opt = document.createElement("option");
+        opt.value = nome;
+        lista.appendChild(opt);
+      });
+
+      setupEmpresaSuggestions(empresa, listaSugestoesEmpresa, empresas);
+    } catch (error) {
+      console.error("Erro ao carregar empresas:", error);
+    }
+  }
 
   const setModoEdicao = (veiculo) => {
     veiculoEmEdicao = veiculo?.id || null;

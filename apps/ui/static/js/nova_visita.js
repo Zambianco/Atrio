@@ -287,6 +287,179 @@ async function listarVeiculosEmVisita() {
     }, {});
 }
 
+
+let modalSugestoesVeiculo = null;
+let sugestoesVeiculoPessoasMap = {};
+
+async function buscarSugestoesVeiculo(veiculoId) {
+  try {
+    const resp = await fetch(`/api/visitas/veiculos/${veiculoId}/sugestoes/`, {
+      credentials: "same-origin",
+      headers: {
+        "Accept": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      console.error("Status:", resp.status, "URL:", resp.url);
+      throw new Error("Erro ao buscar sugestoes do veiculo");
+    }
+
+    return await resp.json();
+  } catch (error) {
+    console.error("Erro ao buscar sugestoes do veiculo:", error);
+    return null;
+  }
+}
+
+function renderPessoaSugestaoItem(pessoa, options) {
+  const pessoaId = getPessoaKey(pessoa);
+  if (!pessoaId) return "";
+
+  const nome = pessoa.nome || pessoa.nome_completo || "Sem nome";
+  const empresa = pessoa.empresa || pessoa.empresa_nome || "Sem empresa";
+  const pessoasEmVisita = (options && options.pessoasEmVisita) || {};
+  const ultimaVisitaId = (options && options.ultimaVisitaId) || null;
+
+  const jaAdicionada = ensureArray(pessoasAdicionadas)
+    .some(p => String(p.id) === String(pessoaId));
+  const visitaAtiva = pessoasEmVisita[pessoaId];
+  const disabled = jaAdicionada || !!visitaAtiva;
+  const btnClass = disabled ? "btn-outline-secondary" : "btn-primary";
+
+  let label = "Adicionar";
+  if (jaAdicionada) label = "Ja adicionada";
+  else if (visitaAtiva) label = `Em visita #${visitaAtiva}`;
+
+  const linkVisita = visitaAtiva
+    ? `<a href="/visitas/${visitaAtiva}/" target="_blank" rel="noopener"
+         class="btn btn-sm btn-outline-secondary btnInlineAbrirVisita">Visita #${visitaAtiva}</a>`
+    : "";
+  const meta = ultimaVisitaId
+    ? `<div class="text-muted small">Ultima visita #${ultimaVisitaId}</div>`
+    : "";
+
+  return `
+    <li class="list-group-item d-flex justify-content-between align-items-center" data-id="${pessoaId}">
+      <div>
+        <strong>${nome}</strong><br>
+        <small class="text-muted">${empresa}</small>
+        ${meta}
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm ${btnClass} btnAdicionarPessoaSugestao" data-id="${pessoaId}" ${disabled ? "disabled" : ""}>
+          ${label}
+        </button>
+        ${linkVisita}
+      </div>
+    </li>
+  `;
+}
+
+async function mostrarModalSugestoesVeiculo(veiculo) {
+  if (!veiculo || !veiculo.id) return;
+
+  const modalEl = document.getElementById("modalSugestoesVeiculo");
+  if (!modalEl) return;
+  if (!modalSugestoesVeiculo) {
+    modalSugestoesVeiculo = new bootstrap.Modal(modalEl);
+  }
+
+  const tituloEl = document.getElementById("sugestaoVeiculoTitulo");
+  const loadingEl = document.getElementById("sugestaoVeiculoLoading");
+  const erroEl = document.getElementById("sugestaoVeiculoErro");
+  const listaEmpresaEl = document.getElementById("listaPessoasEmpresaVeiculo");
+  const listaUltimasEl = document.getElementById("listaPessoasUltimasVisitasVeiculo");
+
+  if (tituloEl) {
+    const placa = veiculo.placa || "";
+    tituloEl.textContent = placa ? placa : `#${veiculo.id}`;
+  }
+  if (erroEl) erroEl.classList.add("d-none");
+  if (erroEl) erroEl.textContent = "";
+  if (listaEmpresaEl) listaEmpresaEl.innerHTML = "";
+  if (listaUltimasEl) listaUltimasEl.innerHTML = "";
+  if (loadingEl) loadingEl.classList.remove("d-none");
+
+  modalSugestoesVeiculo.show();
+
+  const data = await buscarSugestoesVeiculo(veiculo.id);
+  if (!data) {
+    if (erroEl) {
+      erroEl.textContent = "Nao foi possivel carregar as sugestoes.";
+      erroEl.classList.remove("d-none");
+    }
+    if (loadingEl) loadingEl.classList.add("d-none");
+    return;
+  }
+
+  const pessoasEmVisita = await listarPessoasEmVisita();
+  const pessoasEmpresaRaw = Array.isArray(data.pessoas_empresa) ? data.pessoas_empresa : [];
+  const pessoasUltimasRaw = Array.isArray(data.pessoas_ultimas_visitas) ? data.pessoas_ultimas_visitas : [];
+
+  const pessoasEmpresa = [];
+  const pessoasUltimas = [];
+  const vistosEmpresa = new Set();
+  const vistosUltimas = new Set();
+
+  pessoasEmpresaRaw.forEach(p => {
+    const pid = getPessoaKey(p);
+    if (!pid || vistosEmpresa.has(String(pid))) return;
+    vistosEmpresa.add(String(pid));
+    pessoasEmpresa.push(p);
+  });
+
+  pessoasUltimasRaw.forEach(p => {
+    const pid = getPessoaKey(p);
+    if (!pid || vistosUltimas.has(String(pid))) return;
+    vistosUltimas.add(String(pid));
+    pessoasUltimas.push(p);
+  });
+
+  sugestoesVeiculoPessoasMap = {};
+  [...pessoasEmpresa, ...pessoasUltimas].forEach(p => {
+    const pid = getPessoaKey(p);
+    if (pid) sugestoesVeiculoPessoasMap[String(pid)] = p;
+  });
+
+  if (listaEmpresaEl) {
+    if (!pessoasEmpresa.length) {
+      listaEmpresaEl.innerHTML = '<li class="list-group-item text-muted">Nenhuma pessoa encontrada</li>';
+    } else {
+      listaEmpresaEl.innerHTML = pessoasEmpresa
+        .map(p => renderPessoaSugestaoItem(p, { pessoasEmVisita }))
+        .join("");
+    }
+  }
+
+  if (listaUltimasEl) {
+    if (!pessoasUltimas.length) {
+      listaUltimasEl.innerHTML = '<li class="list-group-item text-muted">Nenhuma pessoa encontrada</li>';
+    } else {
+      listaUltimasEl.innerHTML = pessoasUltimas
+        .map(p => renderPessoaSugestaoItem(p, { pessoasEmVisita, ultimaVisitaId: p.grupo_id }))
+        .join("");
+    }
+  }
+
+  if (loadingEl) loadingEl.classList.add("d-none");
+
+  document.querySelectorAll(".btnAdicionarPessoaSugestao").forEach((btn) => {
+    if (btn.disabled) return;
+    btn.addEventListener("click", (ev) => {
+      const id = ev.currentTarget.dataset.id;
+      const pessoa = sugestoesVeiculoPessoasMap[id];
+      if (pessoa) {
+        adicionarPessoaATabela(pessoa);
+        ev.currentTarget.disabled = true;
+        ev.currentTarget.classList.remove("btn-primary");
+        ev.currentTarget.classList.add("btn-outline-secondary");
+        ev.currentTarget.textContent = "Adicionada";
+      }
+    });
+  });
+}
+
 // Adicionar pessoa +á tabela (apenas para nova visita)
 function adicionarPessoaATabela(pessoa) {
   if (isModoGerenciamento()) {
@@ -310,21 +483,23 @@ function adicionarPessoaATabela(pessoa) {
 // Adicionar ve+¡culo +á tabela (apenas para nova visita)
 function adicionarVeiculoATabela(veiculo) {
   if (isModoGerenciamento()) {
-    // No modo gerenciamento, adicionar diretamente +á visita existente
+    // No modo gerenciamento, adicionar diretamente a visita existente
     adicionarVeiculoNaVisitaExistente(veiculo.id);
     return;
   }
-  
-  // C+¦digo original para nova visita
+
+  // Codigo original para nova visita
   if (veiculosAdicionados.some(v => v.id === veiculo.id)) {
-    alert("Este ve+¡culo j+í foi adicionado +á visita");
+    alert("Este veiculo ja foi adicionado a visita");
     return;
   }
-  
+
   veiculosAdicionados.push(veiculo);
   atualizarTabelaVeiculos();
   salvarDraft();
+  mostrarModalSugestoesVeiculo(veiculo);
 }
+
 
 function renderPessoaInputRow() {
   return `
