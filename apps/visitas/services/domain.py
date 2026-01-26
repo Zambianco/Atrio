@@ -167,6 +167,7 @@ def listar_presentes():
         "pessoas": [
             {
                 "id": v.id,
+                "pessoa_id": v.pessoa.id,
                 "grupo_id": v.grupo.id,
                 "nome": v.pessoa.nome,
                 "empresa": v.pessoa.empresa,
@@ -178,6 +179,7 @@ def listar_presentes():
         "veiculos": [
             {
                 "id": v.id,
+                "veiculo_id": v.veiculo.id,
                 "grupo_id": v.grupo.id,
                 "placa": v.veiculo.placa,
                 "empresa": v.veiculo.empresa,

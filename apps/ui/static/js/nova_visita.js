@@ -229,6 +229,64 @@ async function buscarVeiculos(query) {
   }
 }
 
+const PRESENTES_CACHE_MS = 30000;
+let presentesCache = null;
+let presentesCacheAt = 0;
+
+async function carregarPresentes() {
+  const agora = Date.now();
+  if (presentesCache && (agora - presentesCacheAt) < PRESENTES_CACHE_MS) {
+    return presentesCache;
+  }
+
+  try {
+    const resp = await fetch("/api/visitas/presentes/", {
+      credentials: "same-origin",
+      headers: {
+        "Accept": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      console.error("Status:", resp.status, "URL:", resp.url);
+      throw new Error("Erro ao buscar presentes");
+    }
+
+    const data = await resp.json();
+    presentesCache = {
+      pessoas: (data && Array.isArray(data.pessoas)) ? data.pessoas : [],
+      veiculos: (data && Array.isArray(data.veiculos)) ? data.veiculos : [],
+    };
+  } catch (error) {
+    console.error("Erro ao buscar presentes:", error);
+    presentesCache = { pessoas: [], veiculos: [] };
+  }
+
+  presentesCacheAt = Date.now();
+  return presentesCache;
+}
+
+async function listarPessoasEmVisita() {
+  const data = await carregarPresentes();
+  return data.pessoas
+    .filter(item => !item.data_saida)
+    .reduce((acc, item) => {
+      acc[item.pessoa_id] = item.grupo_id;
+      return acc;
+    }, {});
+}
+
+async function listarVeiculosEmVisita() {
+  const data = await carregarPresentes();
+  return data.veiculos
+    .filter(item => !item.data_saida)
+    .reduce((acc, item) => {
+      const veiculoId = item.veiculo_id || item.veiculo;
+      if (veiculoId) acc[veiculoId] = item.grupo_id;
+      return acc;
+    }, {});
+}
+
 // Adicionar pessoa +á tabela (apenas para nova visita)
 function adicionarPessoaATabela(pessoa) {
   if (isModoGerenciamento()) {
@@ -281,6 +339,83 @@ function renderPessoaInputRow() {
   `;
 }
 
+
+function getPessoaKey(pessoa) {
+  return pessoa && (pessoa.id || pessoa.pessoa_id);
+}
+
+function getVeiculoKey(veiculo) {
+  return veiculo && (veiculo.id || veiculo.veiculo_id);
+}
+
+function renderPessoaSuggestionItem(pessoa, visitaGrupoId) {
+  const nome = pessoa.nome || pessoa.nome_completo || "Sem nome";
+  const empresa = pessoa.empresa || pessoa.empresa_nome || "Sem empresa";
+  const visitaAttr = visitaGrupoId ? ` data-visita-grupo="${visitaGrupoId}"` : "";
+  const disabledAttr = visitaGrupoId ? "disabled" : "";
+  const btnClass = visitaGrupoId ? "btn-outline-secondary" : "btn-primary";
+  const label = visitaGrupoId ? `Em visita #${visitaGrupoId}` : "Adicionar";
+  const itemClass = visitaGrupoId
+    ? "list-group-item d-flex justify-content-between align-items-center"
+    : "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+  const linkVisita = visitaGrupoId
+    ? `<a href="/visitas/${visitaGrupoId}/" target="_blank" rel="noopener"
+         class="btn btn-sm btn-outline-secondary btnInlineAbrirVisita">
+         Visita #${visitaGrupoId}
+       </a>`
+    : "";
+
+  return `
+    <div class="${itemClass}"${visitaAttr} data-id="${pessoa.id}">
+      <div>
+        <strong>${nome}</strong><br>
+        <small class="text-muted">${empresa}</small>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm ${btnClass} btnInlineAddPessoa" data-id="${pessoa.id}" ${disabledAttr}>
+          ${label}
+        </button>
+        ${linkVisita}
+      </div>
+    </div>
+  `;
+}
+function renderVeiculoSuggestionItem(veiculo, visitaGrupoId) {
+  const placa = veiculo.placa || "Sem placa";
+  const modelo = veiculo.modelo || veiculo.marca || "Modelo nao informado";
+  const empresa = veiculo.empresa || veiculo.empresa_nome || "Sem empresa";
+  const visitaAttr = visitaGrupoId ? ` data-visita-grupo="${visitaGrupoId}"` : "";
+  const disabledAttr = visitaGrupoId ? "disabled" : "";
+  const btnClass = visitaGrupoId ? "btn-outline-secondary" : "btn-primary";
+  const label = visitaGrupoId ? `Em visita #${visitaGrupoId}` : "Adicionar";
+  const itemClass = visitaGrupoId
+    ? "list-group-item d-flex justify-content-between align-items-center"
+    : "list-group-item list-group-item-action d-flex justify-content-between align-items-center";
+  const linkVisita = visitaGrupoId
+    ? `<a href="/visitas/${visitaGrupoId}/" target="_blank" rel="noopener"
+         class="btn btn-sm btn-outline-secondary btnInlineAbrirVisita">
+         Visita #${visitaGrupoId}
+       </a>`
+    : "";
+  const veiculoId = getVeiculoKey(veiculo) || "";
+
+  return `
+    <div class="${itemClass}"${visitaAttr} data-id="${veiculoId}">
+      <div>
+        <strong>${placa}</strong><br>
+        <small class="text-muted">${modelo}</small>
+        <div class="text-muted small">${empresa}</div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm ${btnClass} btnInlineAddVeiculo" data-id="${veiculoId}" ${disabledAttr}>
+          ${label}
+        </button>
+        ${linkVisita}
+      </div>
+    </div>
+  `;
+}
+
 function renderVeiculoInputRow() {
   return `
     <tr>
@@ -317,22 +452,30 @@ function bindPessoaInlineSearch() {
       return;
     }
 
-    lista.innerHTML = pessoas.map((pessoa) => `
-      <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${pessoa.id}">
-        <span>${pessoa.nome || pessoa.nome_completo || 'Sem nome'}</span>
-        <small class="text-muted">${pessoa.empresa || pessoa.empresa_nome || 'Sem empresa'}</small>
-      </button>
-    `).join('');
+    const pessoasEmVisita = await listarPessoasEmVisita();
+    lista.innerHTML = pessoas.map((pessoa) => (
+      renderPessoaSuggestionItem(pessoa, pessoasEmVisita[getPessoaKey(pessoa)])
+    )).join("");
   };
 
   input.addEventListener("input", handleInput);
   input.addEventListener("keyup", handleInput);
+  input.addEventListener("blur", () => {
+    setTimeout(() => { lista.innerHTML = ""; }, 150);
+  });
 
   const handleSelect = (e) => {
-    const btn = e.target.closest("[data-id]");
-    if (!btn) return;
+    const link = e.target.closest(".btnInlineAbrirVisita");
+    if (link) {
+      if (e.type === "pointerdown") e.preventDefault();
+      return;
+    }
+
+    const row = e.target.closest(".list-group-item[data-id]");
+    if (!row) return;
     if (e.type === "pointerdown") e.preventDefault();
-    const pessoaId = btn.dataset.id;
+    if (row.dataset.visitaGrupo) return;
+    const pessoaId = row.dataset.id;
     const pessoa = (input._lastPessoas || []).find(p => String(p.id) === String(pessoaId));
     if (pessoa) {
       adicionarPessoaATabela(pessoa);
@@ -368,22 +511,36 @@ function bindVeiculoInlineSearch() {
       return;
     }
 
-    lista.innerHTML = veiculos.map((veiculo) => `
-      <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${veiculo.id}">
-        <span>${veiculo.placa || 'Sem placa'}</span>
-        <small class="text-muted">${veiculo.modelo || veiculo.marca || 'Modelo nao informado'}</small>
-      </button>
-    `).join('');
+    const veiculosEmVisita = await listarVeiculosEmVisita();
+
+
+    lista.innerHTML = veiculos.map((veiculo) => (
+
+
+      renderVeiculoSuggestionItem(veiculo, veiculosEmVisita[getVeiculoKey(veiculo)])
+
+
+    )).join("");
   };
 
   input.addEventListener("input", handleInput);
   input.addEventListener("keyup", handleInput);
+  input.addEventListener("blur", () => {
+    setTimeout(() => { lista.innerHTML = ""; }, 150);
+  });
 
   const handleSelect = (e) => {
-    const btn = e.target.closest("[data-id]");
-    if (!btn) return;
+    const link = e.target.closest(".btnInlineAbrirVisita");
+    if (link) {
+      if (e.type === "pointerdown") e.preventDefault();
+      return;
+    }
+
+    const row = e.target.closest(".list-group-item[data-id]");
+    if (!row) return;
     if (e.type === "pointerdown") e.preventDefault();
-    const veiculoId = btn.dataset.id;
+    if (row.dataset.visitaGrupo) return;
+    const veiculoId = row.dataset.id;
     const veiculo = (input._lastVeiculos || []).find(v => String(v.id) === String(veiculoId));
     if (veiculo) {
       adicionarVeiculoATabela(veiculo);
@@ -401,10 +558,9 @@ function setupInlineAutocompleteDelegation() {
   if (window._inlineAutocompleteDelegated) return;
   window._inlineAutocompleteDelegated = true;
 
-  document.addEventListener("input", async (e) => {
+  const handleInline = async (e) => {
     const target = e.target;
     if (!target || !target.id) return;
-    if (target.dataset && target.dataset._boundInline === "1") return;
 
     if (target.id === "pessoaSearchInput") {
       const lista = document.getElementById("pessoaSuggestions");
@@ -415,6 +571,9 @@ function setupInlineAutocompleteDelegation() {
         return;
       }
 
+      if (target._inlineAutoLastQuery === query && e.type !== "change") return;
+      target._inlineAutoLastQuery = query;
+
       const pessoas = await buscarPessoas(query);
       target._lastPessoas = pessoas;
 
@@ -423,12 +582,10 @@ function setupInlineAutocompleteDelegation() {
         return;
       }
 
-      lista.innerHTML = pessoas.map((pessoa) => `
-        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${pessoa.id}">
-          <span>${pessoa.nome || pessoa.nome_completo || "Sem nome"}</span>
-          <small class="text-muted">${pessoa.empresa || pessoa.empresa_nome || "Sem empresa"}</small>
-        </button>
-      `).join("");
+      const pessoasEmVisita = await listarPessoasEmVisita();
+      lista.innerHTML = pessoas.map((pessoa) => (
+        renderPessoaSuggestionItem(pessoa, pessoasEmVisita[getPessoaKey(pessoa)])
+      )).join("");
       return;
     }
 
@@ -441,6 +598,9 @@ function setupInlineAutocompleteDelegation() {
         return;
       }
 
+      if (target._inlineAutoLastQuery === query && e.type !== "change") return;
+      target._inlineAutoLastQuery = query;
+
       const veiculos = await buscarVeiculos(query);
       target._lastVeiculos = veiculos;
 
@@ -449,25 +609,41 @@ function setupInlineAutocompleteDelegation() {
         return;
       }
 
-      lista.innerHTML = veiculos.map((veiculo) => `
-        <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" data-id="${veiculo.id}">
-          <span>${veiculo.placa || "Sem placa"}</span>
-          <small class="text-muted">${veiculo.modelo || veiculo.marca || "Modelo nao informado"}</small>
-        </button>
-      `).join("");
+      const veiculosEmVisita = await listarVeiculosEmVisita();
+
+
+      lista.innerHTML = veiculos.map((veiculo) => (
+
+
+        renderVeiculoSuggestionItem(veiculo, veiculosEmVisita[getVeiculoKey(veiculo)])
+
+
+      )).join("");
     }
-  });
+  };
+
+  document.addEventListener("input", handleInline, true);
+  document.addEventListener("keyup", handleInline, true);
+  document.addEventListener("change", handleInline, true);
+  document.addEventListener("focusout", handleInline, true);
 
   const handleSelect = (e) => {
-    const btn = e.target.closest("[data-id]");
-    if (!btn) return;
-    const lista = btn.closest("#pessoaSuggestions, #veiculoSuggestions");
+    const lista = e.target.closest("#pessoaSuggestions, #veiculoSuggestions");
     if (!lista || lista.dataset._boundInline === "1") return;
-    if (e.type === "pointerdown") e.preventDefault();
 
     if (lista.id === "pessoaSuggestions") {
+      const link = e.target.closest(".btnInlineAbrirVisita");
+      if (link) {
+        if (e.type === "pointerdown") e.preventDefault();
+        return;
+      }
+
+      const row = e.target.closest(".list-group-item[data-id]");
+      if (!row) return;
+      if (e.type === "pointerdown") e.preventDefault();
+      if (row.dataset.visitaGrupo) return;
       const input = document.getElementById("pessoaSearchInput");
-      const pessoaId = btn.dataset.id;
+      const pessoaId = row.dataset.id;
       const pessoa = (input && input._lastPessoas || []).find(p => String(p.id) === String(pessoaId));
       if (pessoa) {
         adicionarPessoaATabela(pessoa);
@@ -481,8 +657,18 @@ function setupInlineAutocompleteDelegation() {
     }
 
     if (lista.id === "veiculoSuggestions") {
+      const link = e.target.closest(".btnInlineAbrirVisita");
+      if (link) {
+        if (e.type === "pointerdown") e.preventDefault();
+        return;
+      }
+
+      const row = e.target.closest(".list-group-item[data-id]");
+      if (!row) return;
+      if (e.type === "pointerdown") e.preventDefault();
+      if (row.dataset.visitaGrupo) return;
       const input = document.getElementById("veiculoSearchInput");
-      const veiculoId = btn.dataset.id;
+      const veiculoId = row.dataset.id;
       const veiculo = (input && input._lastVeiculos || []).find(v => String(v.id) === String(veiculoId));
       if (veiculo) {
         adicionarVeiculoATabela(veiculo);
@@ -1022,6 +1208,9 @@ window.mostrarBuscaPessoa = mostrarBuscaPessoa;
 window.mostrarBuscaVeiculo = mostrarBuscaVeiculo;
 window.buscarPessoas = buscarPessoas;
 window.buscarVeiculos = buscarVeiculos;
+window.listarPessoasEmVisita = listarPessoasEmVisita;
+window.listarVeiculosEmVisita = listarVeiculosEmVisita;
+
 window.adicionarPessoaATabela = adicionarPessoaATabela;
 window.adicionarVeiculoATabela = adicionarVeiculoATabela;
 window.adicionarPessoaNaVisitaExistente = adicionarPessoaNaVisitaExistente;
