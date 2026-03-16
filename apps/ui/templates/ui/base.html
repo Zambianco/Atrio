@@ -102,6 +102,11 @@
               <i class="bi bi-person-circle me-1"></i>
               Olá, {{ request.user.get_full_name|default:request.user.username }}
             </div>
+            {% if request.user.is_staff %}
+            <button id="btnBackupAgora" class="btn btn-sm btn-outline-warning" title="Fazer backup agora">
+              <i class="bi bi-database-add me-1"></i>Backup
+            </button>
+            {% endif %}
             <form method="post" action="{% url 'logout' %}" class="d-inline">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-light">
@@ -193,6 +198,51 @@
 
 <!-- Scripts Globais -->
 <script src="{% static 'js/base.js' %}?v=20260201"></script>
+
+{% if request.user.is_staff %}
+<script>
+(function () {
+  const btn = document.getElementById('btnBackupAgora');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Aguarde...';
+    fetch("{% url 'ui:backup_agora' %}", {
+      method: 'POST',
+      headers: {'X-CSRFToken': '{{ csrf_token }}'},
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          btn.classList.replace('btn-outline-warning', 'btn-success');
+          btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Feito!';
+        } else {
+          btn.classList.replace('btn-outline-warning', 'btn-danger');
+          btn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Erro';
+          btn.title = data.erro || 'Erro desconhecido';
+        }
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.classList.remove('btn-success', 'btn-danger');
+          btn.classList.add('btn-outline-warning');
+          btn.innerHTML = '<i class="bi bi-database-add me-1"></i>Backup';
+          btn.title = 'Fazer backup agora';
+        }, 4000);
+      })
+      .catch(() => {
+        btn.classList.replace('btn-outline-warning', 'btn-danger');
+        btn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Erro';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.classList.remove('btn-danger');
+          btn.classList.add('btn-outline-warning');
+          btn.innerHTML = '<i class="bi bi-database-add me-1"></i>Backup';
+        }, 4000);
+      });
+  });
+})();
+</script>
+{% endif %}
 
 {% block extra_js %}{% endblock %}
 </body>

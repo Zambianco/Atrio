@@ -7,13 +7,14 @@ services:
     mem_limit: ${WEB_MEM:-512m}
     environment:
       - DB_NAME=/data/atrio.sqlite3
+      - TZ=${TZ:-America/Sao_Paulo}
     restart: unless-stopped
     ports:
       - "${WEB_PORT:-8000}:8000"
     volumes:
       - atrio_db:/data
       - staticfiles:/app/staticfiles
-      - ${BACKUP_HOST_DIR:-/mnt/atrio-backups}:/mnt/atrio-backups:ro
+      - ${BACKUP_HOST_DIR:-/mnt/atrio-backups}:/mnt/atrio-backups
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -36,6 +37,7 @@ services:
     environment:
       - BACKUP_INTERVAL_SECONDS=3600
       - BACKUP_RETAIN_COUNT=168
+      - TZ=${TZ:-America/Sao_Paulo}
     volumes:
       - atrio_db:/data
       - ${BACKUP_HOST_DIR:-/mnt/atrio-backups}:/mnt/atrio-backups

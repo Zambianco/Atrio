@@ -23,5 +23,6 @@ urlpatterns = [
     path("visitas/", views.visitas, name="visitas"),
     path('visitas/<int:id>/', views.gerenciar_visita, name='gerenciar_visita'),
     path("coletas/", views.coletas, name="coletas"),
+    path("backup-agora/", views.backup_agora, name="backup_agora"),
      
 ]
