@@ -506,15 +506,8 @@ function renderPessoaInputRow() {
     <tr>
       <td colspan="4">
         <div class="autocomplete-wrap">
-          <div class="d-flex gap-2 align-items-start">
-            <div class="flex-grow-1">
-              <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
-              <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
-            </div>
-            <a href="/cadastro-pessoa/" target="_blank" class="btn btn-outline-success btn-sm text-nowrap" title="Cadastrar nova pessoa">
-              <i class="bi bi-person-plus me-1"></i>Nova pessoa
-            </a>
-          </div>
+          <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
+          <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
         </div>
       </td>
     </tr>
@@ -603,15 +596,8 @@ function renderVeiculoInputRow() {
     <tr>
       <td colspan="4">
         <div class="autocomplete-wrap">
-          <div class="d-flex gap-2 align-items-start">
-            <div class="flex-grow-1">
-              <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
-              <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
-            </div>
-            <a href="/cadastro-veiculo/" target="_blank" class="btn btn-outline-warning btn-sm text-nowrap" title="Cadastrar novo veículo">
-              <i class="bi bi-plus-circle me-1"></i>Novo veículo
-            </a>
-          </div>
+          <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
+          <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
         </div>
       </td>
     </tr>

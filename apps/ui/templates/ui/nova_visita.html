@@ -52,8 +52,11 @@
 
       <!-- Veiculos -->
       <div id="cardVeiculos" class="card mb-4">
-        <div class="card-header bg-warning text-dark fw-bold">
-          <i class="bi bi-car-front me-1"></i>Veículos da Visita
+        <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-car-front me-1"></i>Veículos da Visita</span>
+          <a href="{% url 'ui:cadastro_veiculo' %}" target="_blank" class="btn btn-dark btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Cadastrar Veículo
+          </a>
         </div>
         <div class="card-body">
           <div class="table-responsive table-responsive-inline">
@@ -70,15 +73,8 @@
                 <tr>
                   <td colspan="4">
                     <div class="autocomplete-wrap">
-                      <div class="d-flex gap-2 align-items-start">
-                        <div class="flex-grow-1">
-                          <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
-                          <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
-                        </div>
-                        <a href="{% url 'ui:cadastro_veiculo' %}" target="_blank" class="btn btn-outline-warning btn-sm text-nowrap" title="Cadastrar novo veículo">
-                          <i class="bi bi-plus-circle me-1"></i>Novo veículo
-                        </a>
-                      </div>
+                      <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
+                      <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
                     </div>
                   </td>
                 </tr>
@@ -90,8 +86,11 @@
 
       <!-- Pessoas -->
       <div id="cardPessoas" class="card mb-4">
-        <div class="card-header bg-success text-white fw-bold">
-          <i class="bi bi-people me-1"></i>Pessoas da Visita
+        <div class="card-header bg-success text-white fw-bold d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-people me-1"></i>Pessoas da Visita</span>
+          <a href="{% url 'ui:cadastro_pessoa' %}" target="_blank" class="btn btn-light btn-sm">
+            <i class="bi bi-person-plus me-1"></i>Cadastrar Pessoa
+          </a>
         </div>
         <div class="card-body">
           <div class="table-responsive table-responsive-inline">
@@ -108,15 +107,8 @@
                 <tr>
                   <td colspan="4">
                     <div class="autocomplete-wrap">
-                      <div class="d-flex gap-2 align-items-start">
-                        <div class="flex-grow-1">
-                          <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
-                          <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
-                        </div>
-                        <a href="{% url 'ui:cadastro_pessoa' %}" target="_blank" class="btn btn-outline-success btn-sm text-nowrap" title="Cadastrar nova pessoa">
-                          <i class="bi bi-person-plus me-1"></i>Nova pessoa
-                        </a>
-                      </div>
+                      <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
+                      <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
                     </div>
                   </td>
                 </tr>
