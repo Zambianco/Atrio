@@ -7,6 +7,12 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.5.1 - 2026-03-16
+
+### Corrigido
+
+- Melhoria na exibição da mensagem de erro
+
 ## 1.5.0 - 2026-03-16
 
 ### Adicionado
