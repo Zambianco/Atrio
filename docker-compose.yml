@@ -10,7 +10,7 @@ services:
       - TZ=${TZ:-America/Sao_Paulo}
     restart: unless-stopped
     ports:
-      - "${WEB_PORT:-8000}:8000"
+      - "${WEB_PORT:-8001}:8000"
     volumes:
       - atrio_db:/data
       - staticfiles:/app/staticfiles
@@ -47,36 +47,38 @@ services:
       - |
         import os, time, datetime, sqlite3, subprocess, tempfile
         src = '/data/atrio.sqlite3'
+        trigger = '/data/.backup_trigger'
         dst_dir = os.getenv('BACKUP_DIR', '/mnt/atrio-backups')
         os.makedirs(dst_dir, exist_ok=True)
         interval = int(os.getenv('BACKUP_INTERVAL_SECONDS', '3600'))
         retain = int(os.getenv('BACKUP_RETAIN_COUNT', '168'))
         password = os.getenv('BACKUP_PASSWORD', '')
-        while True:
-            if os.path.exists(src):
-                ts = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-                with tempfile.NamedTemporaryFile(suffix='.sqlite3', delete=False) as tmp:
-                    tmp_path = tmp.name
-                try:
-                    src_conn = sqlite3.connect(src)
-                    dst_conn = sqlite3.connect(tmp_path)
-                    src_conn.backup(dst_conn)
-                    dst_conn.close()
-                    src_conn.close()
-                    if password:
-                        dst = os.path.join(dst_dir, f'db-{ts}.7z')
-                        subprocess.run(
-                            ['7z', 'a', f'-p{password}', '-mhe=1', '-mx=1', dst, tmp_path],
-                            check=True, capture_output=True
-                        )
-                    else:
-                        import shutil
-                        dst = os.path.join(dst_dir, f'db-{ts}.sqlite3')
-                        shutil.move(tmp_path, dst)
-                        tmp_path = None
-                finally:
-                    if tmp_path and os.path.exists(tmp_path):
-                        os.remove(tmp_path)
+        def run_backup():
+            if not os.path.exists(src):
+                return
+            ts = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+            with tempfile.NamedTemporaryFile(suffix='.sqlite3', delete=False) as tmp:
+                tmp_path = tmp.name
+            try:
+                src_conn = sqlite3.connect(src)
+                dst_conn = sqlite3.connect(tmp_path)
+                src_conn.backup(dst_conn)
+                dst_conn.close()
+                src_conn.close()
+                if password:
+                    dst = os.path.join(dst_dir, f'db-{ts}.7z')
+                    subprocess.run(
+                        ['7z', 'a', f'-p{password}', '-mhe=1', '-mx=1', dst, tmp_path],
+                        check=True, capture_output=True
+                    )
+                else:
+                    import shutil
+                    dst = os.path.join(dst_dir, f'db-{ts}.sqlite3')
+                    shutil.move(tmp_path, dst)
+                    tmp_path = None
+            finally:
+                if tmp_path and os.path.exists(tmp_path):
+                    os.remove(tmp_path)
             ext = '.7z' if password else '.sqlite3'
             if retain > 0 and os.path.isdir(dst_dir):
                 files = [
@@ -90,7 +92,19 @@ services:
                         os.remove(old)
                     except OSError:
                         pass
-            time.sleep(interval)
+        while True:
+            run_backup()
+            elapsed = 0
+            while elapsed < interval:
+                time.sleep(5)
+                elapsed += 5
+                if os.path.exists(trigger):
+                    try:
+                        os.remove(trigger)
+                    except OSError:
+                        pass
+                    run_backup()
+                    elapsed = 0
 
 volumes:
   atrio_db:
