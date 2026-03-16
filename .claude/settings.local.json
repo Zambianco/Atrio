@@ -5,7 +5,8 @@
       "Bash(python manage.py makemigrations pessoas --name add_fornecedor_prestador_tipo_choices)",
       "Bash(python manage.py makemigrations visitas)",
       "Bash(python manage.py migrate)",
-      "Bash(grep -r showAlert /c/Users/rodrigo.zambianco/Documents/DEV/Atrio/apps/ui --include=*.js)"
+      "Bash(grep -r showAlert /c/Users/rodrigo.zambianco/Documents/DEV/Atrio/apps/ui --include=*.js)",
+      "Bash(grep -r \"health\\\\|status\\\\|ping\" /c/Users/rodrigo.zambianco/Documents/DEV/Atrio/Atrio --include=*.py)"
     ]
   }
 }

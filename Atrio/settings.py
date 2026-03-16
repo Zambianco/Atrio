@@ -80,6 +80,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "apps.ui.context_processors.app_version",
                 "apps.ui.context_processors.user_groups",
+                "apps.ui.context_processors.backup_status",
             ],
         },
     },

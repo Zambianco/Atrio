@@ -30,6 +30,12 @@
   </div>
 {% endif %}
 
+{% if backup_alerta %}
+  <div class="text-center py-2 fw-bold" style="background-color:#c0392b;color:#fff;letter-spacing:.03em;">
+    <i class="bi bi-database-exclamation me-2"></i>ATENÇÃO: {{ backup_alerta_msg }}
+  </div>
+{% endif %}
+
 <!-- Navegação -->
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm">
   <div class="container">

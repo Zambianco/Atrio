@@ -13,6 +13,7 @@ services:
     volumes:
       - atrio_db:/data
       - staticfiles:/app/staticfiles
+      - ${BACKUP_HOST_DIR:-/mnt/atrio-backups}:/mnt/atrio-backups:ro
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
@@ -24,7 +25,9 @@ services:
       retries: 5
       start_period: 20s
   backup:
-    image: python:3.12-slim
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backup
     env_file:
       - Atrio/.env
     cpus: ${BACKUP_CPUS:-0.25}
@@ -40,22 +43,44 @@ services:
       - python
       - -c
       - |
-        import os, time, shutil, datetime
+        import os, time, datetime, sqlite3, subprocess, tempfile
         src = '/data/atrio.sqlite3'
         dst_dir = os.getenv('BACKUP_DIR', '/mnt/atrio-backups')
         os.makedirs(dst_dir, exist_ok=True)
         interval = int(os.getenv('BACKUP_INTERVAL_SECONDS', '3600'))
         retain = int(os.getenv('BACKUP_RETAIN_COUNT', '168'))
+        password = os.getenv('BACKUP_PASSWORD', '')
         while True:
             if os.path.exists(src):
                 ts = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-                dst = os.path.join(dst_dir, f'db-{ts}.sqlite3')
-                shutil.copy2(src, dst)
+                with tempfile.NamedTemporaryFile(suffix='.sqlite3', delete=False) as tmp:
+                    tmp_path = tmp.name
+                try:
+                    src_conn = sqlite3.connect(src)
+                    dst_conn = sqlite3.connect(tmp_path)
+                    src_conn.backup(dst_conn)
+                    dst_conn.close()
+                    src_conn.close()
+                    if password:
+                        dst = os.path.join(dst_dir, f'db-{ts}.7z')
+                        subprocess.run(
+                            ['7z', 'a', f'-p{password}', '-mhe=1', '-mx=1', dst, tmp_path],
+                            check=True, capture_output=True
+                        )
+                    else:
+                        import shutil
+                        dst = os.path.join(dst_dir, f'db-{ts}.sqlite3')
+                        shutil.move(tmp_path, dst)
+                        tmp_path = None
+                finally:
+                    if tmp_path and os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+            ext = '.7z' if password else '.sqlite3'
             if retain > 0 and os.path.isdir(dst_dir):
                 files = [
                     os.path.join(dst_dir, name)
                     for name in os.listdir(dst_dir)
-                    if name.startswith('db-') and name.endswith('.sqlite3')
+                    if name.startswith('db-') and name.endswith(ext)
                 ]
                 files.sort(key=os.path.getmtime, reverse=True)
                 for old in files[retain:]:
