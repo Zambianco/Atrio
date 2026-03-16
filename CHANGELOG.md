@@ -11,7 +11,17 @@ e este projeto segue o Versionamento Semantico.
 
 ### Alterado
 
+### Adicionado
+
+### Alterado
+
 ### Corrigido
+
+## 1.2.1 - 2026-03-16
+
+### Corrigido
+
+- Ampliar busca de veículos por empresa e corrigir erro 403 em sugestões
 
 ## 1.2.0 - 2026-03-16
 
