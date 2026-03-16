@@ -6,6 +6,8 @@ class Pessoa(models.Model):
         ("visitante", "Visitante"),
         ("funcionario", "Funcionário"),
         ("motorista", "Motorista"),
+        ("fornecedor", "Fornecedor"),
+        ("prestador", "Prestador de Serviço"),
     ]
 
     nome = models.CharField(max_length=200)

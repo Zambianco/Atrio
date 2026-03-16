@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -r \"create_superuser\\\\|createsuperuser\\\\|admin\\\\|superuser\" c:Usersrodrigo.zambiancoDocumentsDEVAtrio --include=*.sh --include=Dockerfile* --include=docker*)",
+      "Bash(python manage.py makemigrations pessoas --name add_fornecedor_prestador_tipo_choices)"
+    ]
+  }
+}
