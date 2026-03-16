@@ -7,6 +7,12 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.5.2 - 2026-03-16
+
+### Alterado
+
+- Backup manual agora utiliza arquivo gatilho para acionamento via container dedicado
+
 ## 1.5.1 - 2026-03-16
 
 ### Corrigido
