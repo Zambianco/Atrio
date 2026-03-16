@@ -122,13 +122,23 @@ class DocumentoViewSet(viewsets.ModelViewSet):
         queryset = Documento.objects.filter(
             tipo_documento_id=tipo_documento,
             numero__iexact=numero,
-        )
+        ).select_related("pessoa")
 
         if exclude_id:
             queryset = queryset.exclude(id=exclude_id)
 
-        exists = queryset.exists()
-        return Response({"exists": exists})
+        doc = queryset.first()
+        if doc:
+            return Response({
+                "exists": True,
+                "pessoa": {
+                    "id": doc.pessoa.id,
+                    "nome": doc.pessoa.nome,
+                    "empresa": doc.pessoa.empresa or "",
+                    "tipo": doc.pessoa.tipo,
+                },
+            })
+        return Response({"exists": False})
     
     
     

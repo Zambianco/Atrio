@@ -152,21 +152,14 @@
               <!-- Documentos (Seção separada) -->
               <div class="col-12 mt-4">
                 <div class="border-top pt-3">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                      <h5 class="fw-bold mb-1">
-                        <i class="bi bi-file-earmark-text me-2 text-primary"></i>
-                        Documentos
-                      </h5>
-                      <p class="text-muted mb-0">Adicione os documentos da pessoa</p>
-                    </div>
-                    <button id="btnAdicionarDocumento" 
-                            type="button" 
-                            class="btn btn-primary">
-                      <i class="bi bi-plus-circle me-1"></i>Adicionar Documento
-                    </button>
+                  <div class="mb-3">
+                    <h5 class="fw-bold mb-1">
+                      <i class="bi bi-file-earmark-text me-2 text-primary"></i>
+                      Documentos
+                    </h5>
+                    <p class="text-muted mb-0">Adicione os documentos da pessoa</p>
                   </div>
-                  
+
                   <div id="documentosContainer" class="documentos-container">
                     <!-- Documentos serão inseridos aqui -->
                     <div class="text-center py-5 border rounded bg-light" id="nenhumDocumento">
@@ -174,7 +167,15 @@
                       <p class="text-muted">Nenhum documento adicionado</p>
                     </div>
                   </div>
-                  
+
+                  <div class="mt-3">
+                    <button id="btnAdicionarDocumento"
+                            type="button"
+                            class="btn btn-primary">
+                      <i class="bi bi-plus-circle me-1"></i>Adicionar Documento
+                    </button>
+                  </div>
+
                   <div class="form-text text-muted mt-2">
                     <i class="bi bi-info-circle me-1"></i>
                     Você pode adicionar múltiplos documentos (RG, CNH, Carteira de Trabalho, etc.)
@@ -225,10 +226,41 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Documento já cadastrado -->
+<div class="modal fade" id="modalPessoaExistente" tabindex="-1" aria-labelledby="modalPessoaExistenteLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalPessoaExistenteLabel">
+          <i class="bi bi-person-exclamation me-2 text-warning"></i>Documento já cadastrado
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">Este número de documento já está vinculado à seguinte pessoa:</p>
+        <div class="card border-primary">
+          <div class="card-body">
+            <p class="mb-1"><strong>Nome:</strong> <span id="modalPessoaNome"></span></p>
+            <p class="mb-1"><strong>Empresa:</strong> <span id="modalPessoaEmpresa"></span></p>
+            <p class="mb-0"><strong>Tipo:</strong> <span id="modalPessoaTipo"></span></p>
+          </div>
+        </div>
+        <p class="mt-3 mb-0">Deseja abrir o cadastro desta pessoa para edição?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnAbrirCadastroPessoa">
+          <i class="bi bi-pencil me-1"></i>Abrir Cadastro
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/nova_pessoa.js' %}?v=20260132"></script>
+<script src="{% static 'js/nova_pessoa.js' %}?v=20260316"></script>
 
 <!-- Template para documentos -->
 <template id="documentoTemplate">

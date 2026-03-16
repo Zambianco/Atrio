@@ -418,6 +418,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  const tipoLabels = {
+    visitante: "Visitante",
+    funcionario: "Funcionário",
+    motorista: "Motorista",
+    fornecedor: "Fornecedor",
+    prestador: "Prestador de Serviço",
+  };
+
+  const mostrarModalPessoaExistente = (pessoa) => {
+    document.getElementById("modalPessoaNome").textContent = pessoa.nome || "-";
+    document.getElementById("modalPessoaEmpresa").textContent = pessoa.empresa || "Sem empresa";
+    document.getElementById("modalPessoaTipo").textContent = tipoLabels[pessoa.tipo] || pessoa.tipo || "-";
+
+    const btnAbrir = document.getElementById("btnAbrirCadastroPessoa");
+    const novoBtn = btnAbrir.cloneNode(true);
+    btnAbrir.parentNode.replaceChild(novoBtn, btnAbrir);
+
+    novoBtn.addEventListener("click", async () => {
+      bootstrap.Modal.getInstance(document.getElementById("modalPessoaExistente"))?.hide();
+      await carregarPessoaParaEdicao(pessoa.id);
+    });
+
+    new bootstrap.Modal(document.getElementById("modalPessoaExistente")).show();
+  };
+
   const verificarDocumentoExistente = async (row) => {
     const tipoSelect = row.querySelector(".tipo-documento");
     const numeroInput = row.querySelector(".numero-documento");
@@ -443,6 +468,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const existe = !!data.exists;
       aviso.classList.toggle("d-none", !existe);
       numeroInput.classList.toggle("is-invalid", existe);
+      if (existe && data.pessoa) {
+        mostrarModalPessoaExistente(data.pessoa);
+      }
       return existe;
     } catch (err) {
       console.error(err);
