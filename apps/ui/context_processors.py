@@ -14,7 +14,7 @@ def backup_status(request):
     backup_dir = os.getenv("BACKUP_DIR", "")
     interval = int(os.getenv("BACKUP_INTERVAL_SECONDS", "3600"))
     password = os.getenv("BACKUP_PASSWORD", "")
-    ext = ".7z" if password else ".sqlite3"
+    ext = ".enc" if password else ".sqlite3"
 
     backup_alerta = False
     backup_alerta_msg = ""

@@ -66,13 +66,16 @@ services:
                 dst_conn.close()
                 src_conn.close()
                 if password:
-                    dst = os.path.join(dst_dir, f'db-{ts}.7z')
+                    dst = os.path.join(dst_dir, f'db-{ts}.enc')
+                    env = os.environ.copy()
+                    env['BACKUP_PASSWORD'] = password
                     result = subprocess.run(
-                        ['7z', 'a', f'-p{password}', '-mhe=1', '-mx=1', dst, tmp_path],
-                        capture_output=True, text=True, encoding='utf-8'
+                        ['openssl', 'enc', '-aes-256-cbc', '-pbkdf2', '-iter', '100000',
+                         '-in', tmp_path, '-out', dst, '-pass', 'env:BACKUP_PASSWORD'],
+                        capture_output=True, text=True, env=env
                     )
                     if result.returncode != 0:
-                        raise RuntimeError(f'7z falhou (rc={result.returncode}): {result.stderr.strip() or result.stdout.strip()}')
+                        raise RuntimeError(f'openssl falhou (rc={result.returncode}): {result.stderr.strip()}')
                 else:
                     import shutil
                     dst = os.path.join(dst_dir, f'db-{ts}.sqlite3')
@@ -81,7 +84,7 @@ services:
             finally:
                 if tmp_path and os.path.exists(tmp_path):
                     os.remove(tmp_path)
-            ext = '.7z' if password else '.sqlite3'
+            ext = '.enc' if password else '.sqlite3'
             if retain > 0 and os.path.isdir(dst_dir):
                 files = [
                     os.path.join(dst_dir, name)
