@@ -70,8 +70,15 @@
                 <tr>
                   <td colspan="4">
                     <div class="autocomplete-wrap">
-                      <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
-                      <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
+                      <div class="d-flex gap-2 align-items-start">
+                        <div class="flex-grow-1">
+                          <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
+                          <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
+                        </div>
+                        <a href="{% url 'ui:cadastro_veiculo' %}" target="_blank" class="btn btn-outline-warning btn-sm text-nowrap" title="Cadastrar novo veículo">
+                          <i class="bi bi-plus-circle me-1"></i>Novo veículo
+                        </a>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -101,8 +108,15 @@
                 <tr>
                   <td colspan="4">
                     <div class="autocomplete-wrap">
-                      <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
-                      <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
+                      <div class="d-flex gap-2 align-items-start">
+                        <div class="flex-grow-1">
+                          <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
+                          <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
+                        </div>
+                        <a href="{% url 'ui:cadastro_pessoa' %}" target="_blank" class="btn btn-outline-success btn-sm text-nowrap" title="Cadastrar nova pessoa">
+                          <i class="bi bi-person-plus me-1"></i>Nova pessoa
+                        </a>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -158,7 +172,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/nova_visita.js' %}?v=20260130"></script>
+<script src="{% static 'js/nova_visita.js' %}?v=20260316"></script>
 <script src="{% static 'js/modal_seleciona_pessoa.js' %}"></script>
 <script src="{% static 'js/modal_seleciona_veiculo.js' %}"></script>
 {% endblock %}

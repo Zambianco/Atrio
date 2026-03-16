@@ -1,4 +1,4 @@
-// ========== VARI+üVEIS GLOBAIS ==========
+// ========== VARI+ï¿½VEIS GLOBAIS ==========
 let grupoVisita = null;
 let pessoasAdicionadas = [];
 let veiculosAdicionados = [];
@@ -59,7 +59,7 @@ function carregarDraft() {
     atualizarTabelaVeiculos();
     atualizarEstadoBotaoRegistrar();
 
-    // Mostrar badge de rascunho carregado com timestamp (se disponível)
+    // Mostrar badge de rascunho carregado com timestamp (se disponï¿½vel)
     try {
       const draftBadge = document.getElementById('draftBadge');
       if (draftBadge) {
@@ -74,7 +74,7 @@ function carregarDraft() {
         // Limpar timeout anterior se existir
         try { if (draftBadgeTimeout) { clearTimeout(draftBadgeTimeout); draftBadgeTimeout = null; } } catch (e) {}
 
-        // Esconder o badge automaticamente após DRAFT_DISPLAY_MS
+        // Esconder o badge automaticamente apï¿½s DRAFT_DISPLAY_MS
         draftBadgeTimeout = setTimeout(() => {
           try {
             draftBadge.classList.add('d-none');
@@ -105,7 +105,7 @@ function limparDraft() {
 // let modalBuscaPessoa = null;
 // let modalBuscaVeiculo = null;
 
-// ========== FUN+ç+òES GLOBAIS ==========
+// ========== FUN+ï¿½+ï¿½ES GLOBAIS ==========
 
 // CSRF
 function getCookie(name) {
@@ -125,18 +125,18 @@ function getCookie(name) {
 
 const csrftoken = getCookie("csrftoken");
 
-// Fun+º+úo para verificar se estamos na p+ígina de gerenciamento
+// Fun+ï¿½+ï¿½o para verificar se estamos na p+ï¿½gina de gerenciamento
 function isModoGerenciamento() {
   return window.modoGerenciamento === true;
 }
 
-// Fun+º+Áes auxiliares
+// Fun+ï¿½+ï¿½es auxiliares
 function mostrarOverlay() {
-  // Deprecated - modal Bootstrap n+úo precisa de overlay
+  // Deprecated - modal Bootstrap n+ï¿½o precisa de overlay
 }
 
 function esconderOverlay() {
-  // Deprecated - modal Bootstrap n+úo precisa de overlay
+  // Deprecated - modal Bootstrap n+ï¿½o precisa de overlay
 }
 
 function mostrarBuscaPessoa() {
@@ -148,7 +148,7 @@ function mostrarBuscaPessoa() {
     document.getElementById('listaSugestoesPessoa').innerHTML = '';
     modalBuscaPessoa.show();
   } else {
-    console.error('Modal Bootstrap de busca de pessoa n+úo inicializado');
+    console.error('Modal Bootstrap de busca de pessoa n+ï¿½o inicializado');
   }
 }
 
@@ -160,7 +160,7 @@ function esconderBuscaPessoa() {
 }
 
 function mostrarBuscaVeiculo() {
-  console.log("Mostrar busca ve+¡culo - Modo Gerenciamento:", isModoGerenciamento());
+  console.log("Mostrar busca ve+ï¿½culo - Modo Gerenciamento:", isModoGerenciamento());
   
   // Usar modal Bootstrap unificado
   if (typeof modalBuscaVeiculo !== 'undefined' && modalBuscaVeiculo) {
@@ -168,7 +168,7 @@ function mostrarBuscaVeiculo() {
     document.getElementById('listaSugestoesVeiculo').innerHTML = '';
     modalBuscaVeiculo.show();
   } else {
-    console.error('Modal Bootstrap de busca de ve+¡culo n+úo inicializado');
+    console.error('Modal Bootstrap de busca de ve+ï¿½culo n+ï¿½o inicializado');
   }
 }
 
@@ -204,7 +204,7 @@ async function buscarPessoas(query) {
   }
 }
 
-// Buscar ve+¡culos na API
+// Buscar ve+ï¿½culos na API
 async function buscarVeiculos(query) {
   try {
     const resp = await fetch(`/api/veiculos/veiculos/buscar/?q=${encodeURIComponent(query)}`, {
@@ -217,14 +217,14 @@ async function buscarVeiculos(query) {
     
     if (!resp.ok) {
       console.error("Status:", resp.status, "URL:", resp.url);
-      throw new Error("Erro ao buscar ve+¡culos");
+      throw new Error("Erro ao buscar ve+ï¿½culos");
     }
     
     const data = await resp.json();
-    console.log("Dados retornados da API ve+¡culos:", data);
+    console.log("Dados retornados da API ve+ï¿½culos:", data);
     return data.veiculos || [];
   } catch (error) {
-    console.error("Erro ao buscar ve+¡culos:", error);
+    console.error("Erro ao buscar ve+ï¿½culos:", error);
     return [];
   }
 }
@@ -460,17 +460,17 @@ async function mostrarModalSugestoesVeiculo(veiculo) {
   });
 }
 
-// Adicionar pessoa +á tabela (apenas para nova visita)
+// Adicionar pessoa +ï¿½ tabela (apenas para nova visita)
 function adicionarPessoaATabela(pessoa) {
   if (isModoGerenciamento()) {
-    // No modo gerenciamento, adicionar diretamente +á visita existente
+    // No modo gerenciamento, adicionar diretamente +ï¿½ visita existente
     adicionarPessoaNaVisitaExistente(pessoa.id);
     return;
   }
   
-  // C+¦digo original para nova visita
+  // C+ï¿½digo original para nova visita
   if (pessoasAdicionadas.some(p => p.id === pessoa.id)) {
-    alert("Esta pessoa j+í foi adicionada +á visita");
+    alert("Esta pessoa j+ï¿½ foi adicionada +ï¿½ visita");
     return;
   }
   
@@ -480,7 +480,7 @@ function adicionarPessoaATabela(pessoa) {
   salvarDraft();
 }
 
-// Adicionar ve+¡culo +á tabela (apenas para nova visita)
+// Adicionar ve+ï¿½culo +ï¿½ tabela (apenas para nova visita)
 function adicionarVeiculoATabela(veiculo) {
   if (isModoGerenciamento()) {
     // No modo gerenciamento, adicionar diretamente a visita existente
@@ -506,8 +506,15 @@ function renderPessoaInputRow() {
     <tr>
       <td colspan="4">
         <div class="autocomplete-wrap">
-          <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
-          <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
+          <div class="d-flex gap-2 align-items-start">
+            <div class="flex-grow-1">
+              <input id="pessoaSearchInput" class="form-control form-control-sm" placeholder="Digite o nome (min 3 caracteres)">
+              <div id="pessoaSuggestions" class="list-group mt-2 autocomplete-list"></div>
+            </div>
+            <a href="/cadastro-pessoa/" target="_blank" class="btn btn-outline-success btn-sm text-nowrap" title="Cadastrar nova pessoa">
+              <i class="bi bi-person-plus me-1"></i>Nova pessoa
+            </a>
+          </div>
         </div>
       </td>
     </tr>
@@ -596,8 +603,15 @@ function renderVeiculoInputRow() {
     <tr>
       <td colspan="4">
         <div class="autocomplete-wrap">
-          <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
-          <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
+          <div class="d-flex gap-2 align-items-start">
+            <div class="flex-grow-1">
+              <input id="veiculoSearchInput" class="form-control form-control-sm" placeholder="Digite placa ou modelo (min 3 caracteres)">
+              <div id="veiculoSuggestions" class="list-group mt-2 autocomplete-list"></div>
+            </div>
+            <a href="/cadastro-veiculo/" target="_blank" class="btn btn-outline-warning btn-sm text-nowrap" title="Cadastrar novo veÃ­culo">
+              <i class="bi bi-plus-circle me-1"></i>Novo veÃ­culo
+            </a>
+          </div>
         </div>
       </td>
     </tr>
@@ -942,11 +956,11 @@ function atualizarTabelaVeiculos() {
 async function cancelarVisita() {
   if (isModoGerenciamento()) return;
   
-  const confirmar = await (window.showConfirm ? window.showConfirm('Deseja realmente cancelar esta visita? Todos os dados serão perdidos.', 'Cancelar visita') : Promise.resolve(window.confirm('Deseja realmente cancelar esta visita? Todos os dados serão perdidos.')));
+  const confirmar = await (window.showConfirm ? window.showConfirm('Deseja realmente cancelar esta visita? Todos os dados serï¿½o perdidos.', 'Cancelar visita') : Promise.resolve(window.confirm('Deseja realmente cancelar esta visita? Todos os dados serï¿½o perdidos.')));
   if (!confirmar) return;
 
   
-  // if (confirm("Deseja realmente cancelar esta visita? Todos os dados ser+úo perdidos.")) {
+  // if (confirm("Deseja realmente cancelar esta visita? Todos os dados ser+ï¿½o perdidos.")) {
     pessoasAdicionadas = [];
     veiculosAdicionados = [];
     grupoVisita = null;
@@ -962,7 +976,7 @@ async function cancelarVisita() {
     if (responsavelInput) responsavelInput.disabled = false;
 
     if (btnRegistrar) btnRegistrar.disabled = true;
-    // Limpar valores dos inputs básicos
+    // Limpar valores dos inputs bï¿½sicos
     if (motivoInput) motivoInput.value = '';
     if (responsavelInput) responsavelInput.value = '';
     if (observacaoInput) observacaoInput.value = '';
@@ -1082,10 +1096,10 @@ async function registrarVisita() {
   }
 }
 
-// Adicionar pessoa +á visita existente (para modo gerenciamento)
+// Adicionar pessoa +ï¿½ visita existente (para modo gerenciamento)
 async function adicionarPessoaNaVisitaExistente(pessoaId) {
   if (!window.visitaExistenteId) {
-    alert("Visita inv+ílida.");
+    alert("Visita inv+ï¿½lida.");
     return;
   }
 
@@ -1115,10 +1129,10 @@ async function adicionarPessoaNaVisitaExistente(pessoaId) {
   location.reload();
 }
 
-// Adicionar ve+¡culo +á visita existente (para modo gerenciamento)
+// Adicionar ve+ï¿½culo +ï¿½ visita existente (para modo gerenciamento)
 async function adicionarVeiculoNaVisitaExistente(veiculoId) {
   if (!window.visitaExistenteId) {
-    alert("Visita inv+ílida.");
+    alert("Visita inv+ï¿½lida.");
     return;
   }
 
@@ -1141,16 +1155,16 @@ async function adicionarVeiculoNaVisitaExistente(veiculoId) {
       const data = await resp.json();
       msg = data.detail || data.erro || msg;
     } catch {}
-    alert("Erro ao adicionar ve+¡culo: " + msg);
+    alert("Erro ao adicionar ve+ï¿½culo: " + msg);
     return;
   }
 
   location.reload();
 }
 
-// ========== INICIALIZA+ç+âO ==========
+// ========== INICIALIZA+ï¿½+ï¿½O ==========
 document.addEventListener("DOMContentLoaded", () => {
-  // Atualizar vari+íveis globais se estiver em modo gerenciamento
+  // Atualizar vari+ï¿½veis globais se estiver em modo gerenciamento
   if (window.modoGerenciamento) {
     modoGerenciamento = window.modoGerenciamento;
     visitaExistenteId = window.visitaExistenteId;
@@ -1189,7 +1203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setupInlineAutocompleteDelegation();
   }
 
-  // Salvar rascunho ao editar campos básicos
+  // Salvar rascunho ao editar campos bï¿½sicos
   if (motivoInput) motivoInput.addEventListener('input', salvarDraft);
   if (responsavelInput) responsavelInput.addEventListener('input', salvarDraft);
   if (observacaoInput) observacaoInput.addEventListener('input', salvarDraft);
@@ -1200,13 +1214,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnNovaPessoa = document.getElementById("btnNovaPessoa");
   const listaSugestoesPessoa = document.getElementById("listaSugestoesPessoa");
 
-  // Elementos de busca de ve+¡culos (apenas para nova visita)
+  // Elementos de busca de ve+ï¿½culos (apenas para nova visita)
   const buscaVeiculoInput = document.getElementById("buscaVeiculoInput");
   const btnBuscarVeiculo = document.getElementById("btnBuscarVeiculo");
   const btnNovoVeiculo = document.getElementById("btnNovoVeiculo");
   const listaSugestoesVeiculo = document.getElementById("listaSugestoesVeiculo");
 
-  // S+¦ adicionar eventos se n+úo estiver em modo gerenciamento
+  // S+ï¿½ adicionar eventos se n+ï¿½o estiver em modo gerenciamento
   if (!isModoGerenciamento()) {
     // Event Listeners para nova visita
     const btnCancelarVisita = document.getElementById("btnCancelarVisita");
@@ -1219,7 +1233,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnAddPessoa.addEventListener("click", mostrarBuscaPessoa);
     }
 
-    // Bot+úo Adicionar Ve+¡culo
+    // Bot+ï¿½o Adicionar Ve+ï¿½culo
     if (btnAddVeiculo) {
       btnAddVeiculo.addEventListener("click", mostrarBuscaVeiculo);
     }
@@ -1271,7 +1285,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Buscar ve+¡culo ao digitar
+    // Buscar ve+ï¿½culo ao digitar
     if (buscaVeiculoInput) {
       buscaVeiculoInput.addEventListener("input", async (e) => {
         const query = e.target.value.trim();
@@ -1287,7 +1301,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (veiculos.length === 0) {
           listaSugestoesVeiculo.innerHTML = `
             <li class="list-group-item text-center text-muted">
-              Nenhum ve+¡culo encontrado
+              Nenhum ve+ï¿½culo encontrado
             </li>
           `;
           return;
@@ -1297,7 +1311,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <li class="list-group-item d-flex justify-content-between align-items-center">
             <div>
               <strong>${veiculo.placa}</strong><br>
-              <small class="text-muted">${veiculo.modelo || veiculo.marca || 'Modelo n+úo informado'}</small>
+              <small class="text-muted">${veiculo.modelo || veiculo.marca || 'Modelo n+ï¿½o informado'}</small>
             </div>
             <button class="btn btn-sm btn-primary btnAdicionarVeiculo" data-id="${veiculo.id}">
               Adicionar
@@ -1318,7 +1332,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Bot+úo Buscar Pessoa
+    // Bot+ï¿½o Buscar Pessoa
     if (btnBuscarPessoa) {
       btnBuscarPessoa.addEventListener("click", () => {
         const query = buscaPessoaInput ? buscaPessoaInput.value.trim() : '';
@@ -1328,7 +1342,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Bot+úo Buscar Ve+¡culo
+    // Bot+ï¿½o Buscar Ve+ï¿½culo
     if (btnBuscarVeiculo) {
       btnBuscarVeiculo.addEventListener("click", () => {
         const query = buscaVeiculoInput ? buscaVeiculoInput.value.trim() : '';
@@ -1338,17 +1352,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Bot+úo Nova Pessoa
+    // Bot+ï¿½o Nova Pessoa
     if (btnNovaPessoa) {
       btnNovaPessoa.addEventListener("click", () => {
-        alert("Funcionalidade de cadastrar nova pessoa ser+í implementada aqui");
+        alert("Funcionalidade de cadastrar nova pessoa ser+ï¿½ implementada aqui");
       });
     }
 
-    // Bot+úo Novo Ve+¡culo
+    // Bot+ï¿½o Novo Ve+ï¿½culo
     if (btnNovoVeiculo) {
       btnNovoVeiculo.addEventListener("click", () => {
-        alert("Funcionalidade de cadastrar novo ve+¡culo ser+í implementada aqui");
+        alert("Funcionalidade de cadastrar novo ve+ï¿½culo ser+ï¿½ implementada aqui");
       });
     }
 
@@ -1373,12 +1387,12 @@ document.addEventListener("DOMContentLoaded", () => {
       btnRegistrar.addEventListener("click", registrarVisita);
     }
 
-    // Inicializar estado do bot+úo Registrar
+    // Inicializar estado do bot+ï¿½o Registrar
     atualizarEstadoBotaoRegistrar();
   }
 });
 
-// EXPORTAR FUN+ç+òES GLOBAIS PARA USO EM OUTROS ARQUIVOS
+// EXPORTAR FUN+ï¿½+ï¿½ES GLOBAIS PARA USO EM OUTROS ARQUIVOS
 window.mostrarBuscaPessoa = mostrarBuscaPessoa;
 window.mostrarBuscaVeiculo = mostrarBuscaVeiculo;
 window.buscarPessoas = buscarPessoas;
