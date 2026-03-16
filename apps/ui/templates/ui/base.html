@@ -204,6 +204,29 @@
 (function () {
   const btn = document.getElementById('btnBackupAgora');
   if (!btn) return;
+
+  function mostrarErro(msg) {
+    let el = document.getElementById('backupErroMsg');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'backupErroMsg';
+      el.style.cssText = 'position:fixed;top:70px;right:16px;z-index:9999;max-width:360px;';
+      document.body.appendChild(el);
+    }
+    el.innerHTML = `<div class="alert alert-danger alert-dismissible shadow py-2 px-3 mb-0" role="alert">
+      <i class="bi bi-exclamation-triangle me-1"></i><strong>Erro no backup:</strong> ${msg}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>`;
+    setTimeout(() => el.innerHTML = '', 8000);
+  }
+
+  function resetBtn() {
+    btn.disabled = false;
+    btn.classList.remove('btn-success', 'btn-danger');
+    btn.classList.add('btn-outline-warning');
+    btn.innerHTML = '<i class="bi bi-database-add me-1"></i>Backup';
+  }
+
   btn.addEventListener('click', function () {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Aguarde...';
@@ -216,28 +239,19 @@
         if (data.ok) {
           btn.classList.replace('btn-outline-warning', 'btn-success');
           btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Feito!';
+          setTimeout(resetBtn, 4000);
         } else {
+          mostrarErro(data.erro || 'Erro desconhecido');
           btn.classList.replace('btn-outline-warning', 'btn-danger');
           btn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Erro';
-          btn.title = data.erro || 'Erro desconhecido';
+          setTimeout(resetBtn, 4000);
         }
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.classList.remove('btn-success', 'btn-danger');
-          btn.classList.add('btn-outline-warning');
-          btn.innerHTML = '<i class="bi bi-database-add me-1"></i>Backup';
-          btn.title = 'Fazer backup agora';
-        }, 4000);
       })
       .catch(() => {
+        mostrarErro('Não foi possível conectar ao servidor.');
         btn.classList.replace('btn-outline-warning', 'btn-danger');
         btn.innerHTML = '<i class="bi bi-x-circle me-1"></i>Erro';
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.classList.remove('btn-danger');
-          btn.classList.add('btn-outline-warning');
-          btn.innerHTML = '<i class="bi bi-database-add me-1"></i>Backup';
-        }, 4000);
+        setTimeout(resetBtn, 4000);
       });
   });
 })();
