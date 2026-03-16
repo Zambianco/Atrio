@@ -7,6 +7,12 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.5.3 - 2026-03-16
+
+### Corrigido
+
+- Erro de codificação que impedia o uso de caracteres acentuados na senha do backup
+
 ## 1.5.2 - 2026-03-16
 
 ### Alterado
