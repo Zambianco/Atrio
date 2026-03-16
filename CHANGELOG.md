@@ -7,6 +7,12 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.4.0 - 2026-03-16
+
+### Adicionado
+
+- Adicionada verificação de funcionamento do backup
+
 ## 1.3.0 - 2026-03-16
 
 ### Adicionado
