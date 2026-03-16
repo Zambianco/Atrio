@@ -7,6 +7,18 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.6.0 - 2026-03-16
+
+### Adicionado
+
+- Nova página de consulta de cadastros, exibindo todas as pessoas e veículos em abas separadas com filtros por texto e tipo, ordenação e acesso direto à edição de cada registro
+- No cadastro de veículo, caso a placa informada já esteja cadastrada, o usuário é consultado se deseja abrir o cadastro existente, com exibição dos dados do veículo encontrado
+- Cadastros de pessoa e veículo agora aceitam o parâmetro `?id=` na URL para carregar automaticamente o registro para edição
+
+### Alterado
+
+- Menu de navegação reorganizado: itens de cadastro de pessoa e veículo agrupados no dropdown "Cadastros", com acesso à nova consulta de cadastros
+
 ## 1.5.5 - 2026-03-16
 
 ### Corrigido
