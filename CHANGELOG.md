@@ -7,15 +7,13 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
-### Adicionado
-
-### Alterado
+## 1.3.0 - 2026-03-16
 
 ### Adicionado
 
-### Alterado
-
-### Corrigido
+- No cadastro de pessoa, caso o número de documento informado já esteja vinculado a outro cadastro, o usuário é consultado se deseja abrir o cadastro existente
+- Nova página de coleta, exibindo os dados de veículo e motorista para os usuários envolvidos nas atividades de coleta de equipamentos
+- Na criação de nova visita, adicionada a opção de marcar a visita como coleta
 
 ## 1.2.1 - 2026-03-16
 
