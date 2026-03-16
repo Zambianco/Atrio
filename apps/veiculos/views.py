@@ -85,9 +85,22 @@ class VeiculoViewSet(ModelViewSet):
         if suffix:
             queryset = queryset.filter(placa__iendswith=suffix)
 
-        exists = any(
-            re.sub(r"[^A-Z0-9]", "", (item.placa or "").upper()) == normalized
-            for item in queryset.only("placa")
-        )
+        veiculo_encontrado = None
+        for item in queryset.only("placa", "modelo", "cor", "empresa", "tipo"):
+            if re.sub(r"[^A-Z0-9]", "", (item.placa or "").upper()) == normalized:
+                veiculo_encontrado = item
+                break
 
-        return Response({"exists": exists})
+        if veiculo_encontrado:
+            return Response({
+                "exists": True,
+                "veiculo": {
+                    "id": veiculo_encontrado.id,
+                    "placa": veiculo_encontrado.placa,
+                    "modelo": veiculo_encontrado.modelo or "",
+                    "cor": veiculo_encontrado.cor or "",
+                    "empresa": veiculo_encontrado.empresa or "",
+                    "tipo": veiculo_encontrado.tipo or "",
+                },
+            })
+        return Response({"exists": False})

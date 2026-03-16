@@ -252,10 +252,43 @@
     </div>
   </div>
 </div>
+
+<!-- Modal: Placa já cadastrada -->
+<div class="modal fade" id="modalVeiculoExistente" tabindex="-1" aria-labelledby="modalVeiculoExistenteLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalVeiculoExistenteLabel">
+          <i class="bi bi-truck-front me-2 text-warning"></i>Placa já cadastrada
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3">Esta placa já está cadastrada no sistema:</p>
+        <div class="card border-warning">
+          <div class="card-body">
+            <p class="mb-1"><strong>Placa:</strong> <span id="modalVeiculoPlaca"></span></p>
+            <p class="mb-1"><strong>Modelo:</strong> <span id="modalVeiculoModelo"></span></p>
+            <p class="mb-1"><strong>Cor:</strong> <span id="modalVeiculoCor"></span></p>
+            <p class="mb-1"><strong>Empresa:</strong> <span id="modalVeiculoEmpresa"></span></p>
+            <p class="mb-0"><strong>Tipo:</strong> <span id="modalVeiculoTipo"></span></p>
+          </div>
+        </div>
+        <p class="mt-3 mb-0">Deseja abrir o cadastro deste veículo para edição?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" id="btnAbrirCadastroVeiculo">
+          <i class="bi bi-pencil me-1"></i>Abrir Cadastro
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/novo_veiculo.js' %}?v=20260132"></script>
+<script src="{% static 'js/novo_veiculo.js' %}?v=20260316"></script>
 
 <style>
 .accordion-button:not(.collapsed) {

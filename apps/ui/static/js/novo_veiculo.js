@@ -194,6 +194,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnLimpar?.addEventListener("click", () => limparCampos());
 
+  const mostrarModalVeiculoExistente = (veiculo) => {
+    document.getElementById("modalVeiculoPlaca").textContent = veiculo.placa || "-";
+    document.getElementById("modalVeiculoModelo").textContent = veiculo.modelo || "Não informado";
+    document.getElementById("modalVeiculoCor").textContent = veiculo.cor || "Não informada";
+    document.getElementById("modalVeiculoEmpresa").textContent = veiculo.empresa || "Sem empresa";
+    document.getElementById("modalVeiculoTipo").textContent = veiculo.tipo || "Não informado";
+
+    const btnAbrir = document.getElementById("btnAbrirCadastroVeiculo");
+    const novoBtn = btnAbrir.cloneNode(true);
+    btnAbrir.parentNode.replaceChild(novoBtn, btnAbrir);
+
+    novoBtn.addEventListener("click", async () => {
+      bootstrap.Modal.getInstance(document.getElementById("modalVeiculoExistente"))?.hide();
+      await carregarVeiculoParaEdicao(veiculo.id);
+    });
+
+    new bootstrap.Modal(document.getElementById("modalVeiculoExistente")).show();
+  };
+
   const verificarPlacaExistente = async () => {
     const placaValue = (placa.dataset.placaRaw || placa.value || "")
       .toUpperCase()
@@ -214,6 +233,9 @@ document.addEventListener("DOMContentLoaded", () => {
       placaExiste.classList.toggle("d-none", !existe);
       placa.classList.toggle("border-danger", existe);
       placa.classList.toggle("border-2", existe);
+      if (existe && data.veiculo) {
+        mostrarModalVeiculoExistente(data.veiculo);
+      }
       return existe;
     } catch (err) {
       console.error(err);
@@ -320,6 +342,16 @@ document.addEventListener("DOMContentLoaded", () => {
   placa.addEventListener("blur", () => verificarPlacaExistente());
 
   setModoEdicao(null);
+
+  // Auto-carregar veículo se ?id= estiver na URL
+  const urlId = new URLSearchParams(window.location.search).get("id");
+  if (urlId) {
+    const collapse = document.getElementById("collapseBusca");
+    if (collapse) {
+      new bootstrap.Collapse(collapse, { show: true });
+    }
+    carregarVeiculoParaEdicao(urlId);
+  }
 
   btn.addEventListener("click", async () => {
     const placaValue = (placa.dataset.placaRaw || placa.value || "")

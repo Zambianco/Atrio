@@ -717,6 +717,16 @@ document.addEventListener("DOMContentLoaded", () => {
   carregarTiposDocumento();
   setModoEdicao(null);
 
+  // Auto-carregar pessoa se ?id= estiver na URL
+  const urlId = new URLSearchParams(window.location.search).get("id");
+  if (urlId) {
+    const collapse = document.getElementById("collapseBusca");
+    if (collapse) {
+      new bootstrap.Collapse(collapse, { show: true });
+    }
+    carregarPessoaParaEdicao(urlId);
+  }
+
   btn.addEventListener("click", async () => {
     const nomeValue = nome.value.trim();
 

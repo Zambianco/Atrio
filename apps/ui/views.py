@@ -76,6 +76,12 @@ def cadastro_veiculo(request):
     return render(request, "ui/novo_veiculo.html")
 
 
+@login_required
+@block_expedicao_only
+def consulta_cadastros(request):
+    return render(request, "ui/consulta_cadastros.html")
+
+
 @require_GET
 def hora_atual(request):
     now = timezone.localtime(timezone.now())
