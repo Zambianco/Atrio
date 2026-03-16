@@ -7,6 +7,12 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.5.5 - 2026-03-16
+
+### Corrigido
+
+- Substituído 7z por openssl para criptografia do backup, resolvendo falha com senhas contendo caracteres especiais
+
 ## 1.5.4 - 2026-03-16
 
 ### Corrigido
