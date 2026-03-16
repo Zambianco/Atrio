@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
 
 from rest_framework.permissions import IsAuthenticated
-from apps.core.permissions import IsPorteiro, IsUsuario, IsAdmin
+from apps.core.permissions import IsPorteiro, IsUsuario, IsAdmin, IsExpedicao
 
 from apps.pessoas.models import Pessoa
 from apps.veiculos.models import Veiculo
@@ -26,6 +26,7 @@ from .services.domain import (
     sair_veiculo,
     encerrar_visita,
     listar_presentes,
+    marcar_coleta,
 )
 
 
@@ -44,6 +45,15 @@ class VisitaPessoaViewSet(viewsets.ModelViewSet):
     queryset = VisitaPessoa.objects.all()
     serializer_class = VisitaPessoaSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj.grupo.is_coleta:
+            return Response(
+                {"erro": "Esta visita é uma coleta. Não é possível remover pessoas de uma coleta."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=True, methods=["post", "patch"])
     def saida(self, request, pk=None):
         try:
@@ -52,7 +62,7 @@ class VisitaPessoaViewSet(viewsets.ModelViewSet):
             return Response({"erro": e.message}, status=400)
 
         return Response({"ok": True})
-    
+
     @action(detail=True, methods=["post", "patch"])
     def entrada(self, request, pk=None):
         visita = self.get_object()
@@ -65,6 +75,15 @@ class VisitaVeiculoViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     queryset = VisitaVeiculo.objects.all()
     serializer_class = VisitaVeiculoSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if obj.grupo.is_coleta:
+            return Response(
+                {"erro": "Esta visita é uma coleta. Não é possível remover veículos de uma coleta."},
+                status=400
+            )
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=True, methods=["post", "patch"])
     def saida(self, request, pk=None):
@@ -168,6 +187,7 @@ class RegistrarVisitaAPIView(APIView):
                 pessoas_ids=request.data.get("pessoas", []),
                 veiculos_ids=request.data.get("veiculos", []),
                 criado_por=request.user,
+                is_coleta=bool(request.data.get("is_coleta", False)),
             )
         except ValidationError as e:
             return Response({"erro": e.message}, status=400)
@@ -176,6 +196,22 @@ class RegistrarVisitaAPIView(APIView):
             {"ok": True, "grupo_id": grupo.id},
             status=status.HTTP_201_CREATED
         )
+
+
+class MarcarColetaAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsPorteiro | IsAdmin]
+
+    def patch(self, request, grupo_id):
+        is_coleta = request.data.get("is_coleta")
+        if is_coleta is None:
+            return Response({"erro": "Campo is_coleta é obrigatório"}, status=400)
+        try:
+            grupo = marcar_coleta(grupo_id, bool(is_coleta))
+        except GrupoVisita.DoesNotExist:
+            return Response({"erro": "Visita não encontrada"}, status=404)
+        except ValidationError as e:
+            return Response({"erro": e.message}, status=400)
+        return Response({"ok": True, "is_coleta": grupo.is_coleta})
 
 
 class AdicionarNaVisitaAPIView(APIView):
@@ -217,6 +253,7 @@ class GrupoResumoAPIView(APIView):
                 "motivo": grupo.motivo,
                 "autorizado_por": grupo.autorizado_por,
                 "observacao": grupo.observacao,
+                "is_coleta": grupo.is_coleta,
                 "criado_por_username": grupo.criado_por.username if grupo.criado_por else None,
             },
             "pessoas": [

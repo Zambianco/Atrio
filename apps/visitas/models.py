@@ -15,6 +15,7 @@ class GrupoVisita(models.Model):
     autorizado_por = models.CharField(max_length=200, blank=True, null=True)
     motivo = models.CharField(max_length=200, blank=True, null=True)
     observacao = models.TextField(blank=True, null=True)
+    is_coleta = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Visita #{self.id}"

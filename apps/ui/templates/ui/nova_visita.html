@@ -127,6 +127,17 @@
         </div>
         <div class="card-body">
           <div class="row g-3">
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="isColeta" disabled>
+                <label class="form-check-label fw-semibold" for="isColeta">
+                  <i class="bi bi-box-seam me-1"></i>Coleta de equipamento
+                </label>
+              </div>
+              <div id="coletaAviso" class="form-text text-muted">
+                Vincule ao menos uma pessoa e um veículo para habilitar.
+              </div>
+            </div>
             <div class="col-md-6">
               <label class="form-label fw-semibold">Motivo / Destino</label>
               <input id="motivo" class="form-control" placeholder="Ex: Reuniao, Entrega, Manutencao">
@@ -135,10 +146,10 @@
               <label class="form-label fw-semibold">Contato</label>
               <input id="responsavel" class="form-control" placeholder="Ex: Carlos Silva">
             </div>
-          </div>
-          <div class="mt-3">
-            <label class="form-label fw-semibold">Observacoes</label>
-            <textarea id="observacao" class="form-control" rows="4" placeholder="Detalhes adicionais da visita..."></textarea>
+            <div class="col-12">
+              <label class="form-label fw-semibold">Observacoes</label>
+              <textarea id="observacao" class="form-control" rows="4" placeholder="Detalhes adicionais da visita..."></textarea>
+            </div>
           </div>
           <div class="mt-3 d-flex gap-2 align-items-center">
             <button id="btnCancelarVisita" class="btn btn-danger">
@@ -164,7 +175,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/nova_visita.js' %}?v=20260316"></script>
+<script src="{% static 'js/nova_visita.js' %}?v=20260316b"></script>
 <script src="{% static 'js/modal_seleciona_pessoa.js' %}"></script>
 <script src="{% static 'js/modal_seleciona_veiculo.js' %}"></script>
 {% endblock %}

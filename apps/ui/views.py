@@ -1,21 +1,42 @@
+from functools import wraps
+
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from apps.visitas.models import GrupoVisita, VisitaPessoa, VisitaVeiculo
 
 
+def _is_expedicao_only(user):
+    if not user.is_authenticated or user.is_staff:
+        return False
+    groups = set(user.groups.values_list("name", flat=True))
+    return "expedicao" in groups and not (groups & {"porteiro", "usuario"})
+
+
+def block_expedicao_only(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if _is_expedicao_only(request.user):
+            return redirect("ui:coletas")
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+
 @login_required
+@block_expedicao_only
 def painel(request):
     return render(request, "ui/painel.html")
 
 @login_required
+@block_expedicao_only
 def visitas(request):
     return render(request, "ui/consulta_visitas.html")
 
 @login_required
+@block_expedicao_only
 def gerenciar_visita(request, id):
     visita = get_object_or_404(GrupoVisita, pk=id)
 
@@ -26,25 +47,30 @@ def gerenciar_visita(request, id):
         "visita": visita,
         "pessoas": pessoas,
         "veiculos": veiculos,
+        "tem_pessoa_e_veiculo": pessoas.exists() and veiculos.exists(),
     })
-    
-    
+
+
 @login_required
+@block_expedicao_only
 def nova_visita(request):
     return render(request, "ui/nova_visita.html")
 
 
 @login_required
+@block_expedicao_only
 def entrada(request):
     return render(request, "ui/entrada.html")
 
 
 @login_required
+@block_expedicao_only
 def cadastro_pessoa(request):
     return render(request, "ui/nova_pessoa.html")
 
 
 @login_required
+@block_expedicao_only
 def cadastro_veiculo(request):
     return render(request, "ui/novo_veiculo.html")
 
@@ -56,6 +82,19 @@ def hora_atual(request):
         "iso": now.isoformat(),
         "timestamp_ms": int(now.timestamp() * 1000),
     })
+
+
+@login_required
+def coletas(request):
+    grupos = (
+        GrupoVisita.objects.filter(is_coleta=True, data_saida__isnull=True)
+        .prefetch_related(
+            "pessoas__pessoa__documentos__tipo_documento",
+            "veiculos__veiculo",
+        )
+        .order_by("-data_entrada")
+    )
+    return render(request, "ui/coletas.html", {"grupos": grupos})
 
 
 @login_required

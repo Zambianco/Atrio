@@ -43,36 +43,46 @@
     
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
+        {% if not is_expedicao or is_admin or is_porteiro or is_usuario %}
         <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'nova_visita' %}active{% endif %}" 
+          <a class="nav-link {% if request.resolver_match.url_name == 'nova_visita' %}active{% endif %}"
              href="{% url 'ui:nova_visita' %}">
             <i class="bi bi-plus-circle me-1"></i>Nova Visita
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'painel' %}active{% endif %}" 
+          <a class="nav-link {% if request.resolver_match.url_name == 'painel' %}active{% endif %}"
              href="{% url 'ui:painel' %}">
             <i class="bi bi-display me-1"></i>Painel
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'visitas' %}active{% endif %}" 
+          <a class="nav-link {% if request.resolver_match.url_name == 'visitas' %}active{% endif %}"
              href="{% url 'ui:visitas' %}">
             <i class="bi bi-search me-1"></i>Consulta de Visitas
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'cadastro_pessoa' %}active{% endif %}" 
+          <a class="nav-link {% if request.resolver_match.url_name == 'cadastro_pessoa' %}active{% endif %}"
              href="{% url 'ui:cadastro_pessoa' %}">
             <i class="bi bi-person-plus me-1"></i>Cadastro Pessoa
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link {% if request.resolver_match.url_name == 'cadastro_veiculo' %}active{% endif %}" 
+          <a class="nav-link {% if request.resolver_match.url_name == 'cadastro_veiculo' %}active{% endif %}"
              href="{% url 'ui:cadastro_veiculo' %}">
             <i class="bi bi-truck-front me-1"></i>Cadastro Veículo
           </a>
         </li>
+        {% endif %}
+        {% if is_expedicao or is_admin or is_porteiro or is_usuario %}
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'coletas' %}active{% endif %}"
+             href="{% url 'ui:coletas' %}">
+            <i class="bi bi-box-seam me-1"></i>Coletas
+          </a>
+        </li>
+        {% endif %}
       </ul>
       
       <div class="d-flex align-items-center gap-3">

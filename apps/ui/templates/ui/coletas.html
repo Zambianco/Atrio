@@ -1,0 +1,136 @@
+{% extends "ui/base.html" %}
+{% load static %}
+
+{% block title %}Coletas - Atrio{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold text-primary mb-1">
+        <i class="bi bi-box-seam me-2"></i>Coletas
+      </h2>
+      <p class="text-muted mb-0">Visitas marcadas como coleta de equipamento</p>
+    </div>
+  </div>
+
+  {% if not grupos %}
+    <div class="alert alert-info text-center">
+      <i class="bi bi-info-circle me-2"></i>Nenhuma coleta registrada.
+    </div>
+  {% else %}
+    {% for grupo in grupos %}
+      <div class="card mb-3 shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-bold">Coleta #{{ grupo.id }}</span>
+            {% if grupo.data_saida %}
+              <span class="badge bg-secondary">Encerrada</span>
+            {% else %}
+              <span class="badge bg-success">Aberta</span>
+            {% endif %}
+          </div>
+          <div class="d-flex align-items-center gap-3 text-muted small">
+            <span><i class="bi bi-calendar-event me-1"></i>{{ grupo.data_entrada|date:"d/m/Y H:i" }}</span>
+            {% if grupo.motivo %}
+              <span><i class="bi bi-tag me-1"></i>{{ grupo.motivo }}</span>
+            {% endif %}
+            <a href="{% url 'ui:gerenciar_visita' grupo.id %}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye me-1"></i>Detalhe
+            </a>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="row g-4">
+
+            <!-- Veículos -->
+            <div class="col-md-6">
+              <h6 class="text-muted fw-semibold mb-3">
+                <i class="bi bi-truck me-1"></i>Veículos
+              </h6>
+              {% for vv in grupo.veiculos.all %}
+                <div class="border rounded p-3 mb-2 bg-light">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="fw-bold fs-5">{{ vv.veiculo.placa }}</span>
+                    {% if vv.data_saida %}
+                      <span class="badge bg-secondary">Saiu</span>
+                    {% else %}
+                      <span class="badge bg-success">Dentro</span>
+                    {% endif %}
+                  </div>
+                  <div class="row g-1 small text-muted">
+                    {% if vv.veiculo.modelo %}
+                      <div class="col-6"><i class="bi bi-car-front me-1"></i>{{ vv.veiculo.modelo }}</div>
+                    {% endif %}
+                    {% if vv.veiculo.cor %}
+                      <div class="col-6"><i class="bi bi-palette me-1"></i>{{ vv.veiculo.cor }}</div>
+                    {% endif %}
+                    {% if vv.veiculo.tipo %}
+                      <div class="col-6"><i class="bi bi-tag me-1"></i>{{ vv.veiculo.tipo }}</div>
+                    {% endif %}
+                    {% if vv.veiculo.empresa %}
+                      <div class="col-6"><i class="bi bi-building me-1"></i>{{ vv.veiculo.empresa }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              {% empty %}
+                <p class="text-muted small">Nenhum veículo.</p>
+              {% endfor %}
+            </div>
+
+            <!-- Motoristas / Pessoas -->
+            <div class="col-md-6">
+              <h6 class="text-muted fw-semibold mb-3">
+                <i class="bi bi-person me-1"></i>Motoristas / Pessoas
+              </h6>
+              {% for vp in grupo.pessoas.all %}
+                <div class="border rounded p-3 mb-2 bg-light">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="fw-bold">{{ vp.pessoa.nome }}</span>
+                    {% if vp.data_saida %}
+                      <span class="badge bg-secondary">Saiu</span>
+                    {% else %}
+                      <span class="badge bg-success">Dentro</span>
+                    {% endif %}
+                  </div>
+                  <div class="small text-muted mb-2">
+                    {% if vp.pessoa.empresa %}
+                      <span><i class="bi bi-building me-1"></i>{{ vp.pessoa.empresa }}</span>
+                    {% endif %}
+                    {% if vp.pessoa.tipo %}
+                      <span class="ms-2"><i class="bi bi-person-badge me-1"></i>{{ vp.pessoa.get_tipo_display }}</span>
+                    {% endif %}
+                  </div>
+                  {% with docs=vp.pessoa.documentos.all %}
+                    {% if docs %}
+                      <div class="mt-1">
+                        {% for doc in docs %}
+                          <div class="d-flex gap-2 small">
+                            <span class="text-muted">{{ doc.tipo_documento }}:</span>
+                            <span class="fw-semibold">{{ doc.numero }}</span>
+                            {% if doc.emissor %}
+                              <span class="text-muted">/ {{ doc.emissor }}</span>
+                            {% endif %}
+                          </div>
+                        {% endfor %}
+                      </div>
+                    {% else %}
+                      <div class="small text-muted fst-italic">Sem documentos cadastrados.</div>
+                    {% endif %}
+                  {% endwith %}
+                </div>
+              {% empty %}
+                <p class="text-muted small">Nenhuma pessoa.</p>
+              {% endfor %}
+            </div>
+
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+</div>
+{% endblock %}

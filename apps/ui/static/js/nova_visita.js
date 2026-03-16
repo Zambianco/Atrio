@@ -23,6 +23,7 @@ function salvarDraft() {
     const motivoEl = document.getElementById('motivo');
     const responsavelEl = document.getElementById('responsavel');
     const observacaoEl = document.getElementById('observacao');
+    const isColetaEl = document.getElementById('isColeta');
     const draft = {
       motivo: motivoEl ? motivoEl.value : '',
       responsavel: responsavelEl ? responsavelEl.value : '',
@@ -30,6 +31,7 @@ function salvarDraft() {
       pessoas: pessoasAdicionadas || [],
       veiculos: veiculosAdicionados || [],
       grupoVisita: !!grupoVisita,
+      isColeta: isColetaEl ? isColetaEl.checked : false,
       saved_at: new Date().toISOString(),
     };
     localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -58,6 +60,11 @@ function carregarDraft() {
     atualizarTabelaPessoas();
     atualizarTabelaVeiculos();
     atualizarEstadoBotaoRegistrar();
+
+    const isColetaEl = document.getElementById('isColeta');
+    if (isColetaEl && draft.isColeta && !isColetaEl.disabled) {
+      isColetaEl.checked = true;
+    }
 
     // Mostrar badge de rascunho carregado com timestamp (se dispon�vel)
     try {
@@ -496,6 +503,7 @@ function adicionarVeiculoATabela(veiculo) {
 
   veiculosAdicionados.push(veiculo);
   atualizarTabelaVeiculos();
+  atualizarEstadoCheckboxColeta();
   salvarDraft();
   mostrarModalSugestoesVeiculo(veiculo);
 }
@@ -866,7 +874,26 @@ function atualizarEstadoBotaoRegistrar() {
   if (!btnRegistrar) return;
   const temPessoas = ensureArray(pessoasAdicionadas).length > 0;
   btnRegistrar.disabled = !temPessoas;
+  atualizarEstadoCheckboxColeta();
 }
+
+function atualizarEstadoCheckboxColeta() {
+  if (isModoGerenciamento()) return;
+  const chk = document.getElementById("isColeta");
+  const aviso = document.getElementById("coletaAviso");
+  if (!chk) return;
+  const temPessoa = ensureArray(pessoasAdicionadas).length > 0;
+  const temVeiculo = ensureArray(veiculosAdicionados).length > 0;
+  const habilitado = temPessoa && temVeiculo;
+  chk.disabled = !habilitado;
+  if (aviso) aviso.classList.toggle("d-none", habilitado);
+  if (!habilitado && chk.checked) {
+    chk.checked = false;
+    const motivoEl = document.getElementById("motivo");
+    if (motivoEl && motivoEl.value === "Coleta") motivoEl.value = "";
+  }
+}
+
 
 function atualizarTabelaPessoas() {
   if (isModoGerenciamento()) return;
@@ -893,6 +920,12 @@ function atualizarTabelaPessoas() {
 
   document.querySelectorAll('.btnRemoverPessoa').forEach(btn => {
     btn.addEventListener('click', (e) => {
+      const chk = document.getElementById("isColeta");
+      if (chk && chk.checked) {
+        if (window.showAlert) window.showAlert('Esta visita está marcada como coleta. Desmarque a coleta antes de remover pessoas.', 'Bloqueado');
+        else alert('Esta visita está marcada como coleta. Desmarque a coleta antes de remover pessoas.');
+        return;
+      }
       const index = parseInt(e.target.closest('button').dataset.index);
       pessoasAdicionadas.splice(index, 1);
       atualizarTabelaPessoas();
@@ -929,9 +962,16 @@ function atualizarTabelaVeiculos() {
 
   document.querySelectorAll('.btnRemoverVeiculo').forEach(btn => {
     btn.addEventListener('click', (e) => {
+      const chk = document.getElementById("isColeta");
+      if (chk && chk.checked) {
+        if (window.showAlert) window.showAlert('Esta visita está marcada como coleta. Desmarque a coleta antes de remover veículos.', 'Bloqueado');
+        else alert('Esta visita está marcada como coleta. Desmarque a coleta antes de remover veículos.');
+        return;
+      }
       const index = parseInt(e.target.closest('button').dataset.index);
       veiculosAdicionados.splice(index, 1);
       atualizarTabelaVeiculos();
+      atualizarEstadoCheckboxColeta();
       salvarDraft();
     });
   });
@@ -1039,6 +1079,7 @@ async function registrarVisita() {
         observacao: observacao,
         pessoas: pessoasIds,
         veiculos: veiculosIds,
+        is_coleta: (document.getElementById('isColeta') || {}).checked || false,
       }),
     });
 
@@ -1375,6 +1416,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Inicializar estado do bot+�o Registrar
     atualizarEstadoBotaoRegistrar();
+
+    // Listener do checkbox de coleta
+    const chkColeta = document.getElementById("isColeta");
+    if (chkColeta) {
+      chkColeta.addEventListener("change", function () {
+        const motivoEl = document.getElementById("motivo");
+        if (!motivoEl) return;
+        if (chkColeta.checked) {
+          if (!motivoEl.value.trim()) motivoEl.value = "Coleta";
+        } else {
+          if (motivoEl.value === "Coleta") motivoEl.value = "";
+        }
+        salvarDraft();
+      });
+    }
   }
 });
 

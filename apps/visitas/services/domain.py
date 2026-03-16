@@ -29,10 +29,25 @@ def _validar_veiculo_nao_em_visita(veiculo_id):
         raise ValidationError("Veículo já está em visita ativa")
 
 
+def marcar_coleta(grupo_id, is_coleta):
+    grupo = GrupoVisita.objects.get(id=grupo_id)
+    if is_coleta:
+        if not grupo.pessoas.exists():
+            raise ValidationError("A visita precisa ter ao menos uma pessoa para ser marcada como coleta")
+        if not grupo.veiculos.exists():
+            raise ValidationError("A visita precisa ter ao menos um veículo para ser marcada como coleta")
+    grupo.is_coleta = is_coleta
+    grupo.save(update_fields=["is_coleta"])
+    return grupo
+
+
 @transaction.atomic
-def registrar_visita(motivo, autorizado_por, observacao, pessoas_ids, veiculos_ids, criado_por=None):
+def registrar_visita(motivo, autorizado_por, observacao, pessoas_ids, veiculos_ids, criado_por=None, is_coleta=False):
     if not pessoas_ids:
         raise ValidationError("Informe ao menos uma pessoa")
+
+    if is_coleta and not veiculos_ids:
+        raise ValidationError("Uma coleta precisa ter ao menos um veículo")
 
     agora = timezone.now()
 
@@ -41,7 +56,8 @@ def registrar_visita(motivo, autorizado_por, observacao, pessoas_ids, veiculos_i
         autorizado_por=autorizado_por,
         observacao=observacao,
         data_entrada=agora,
-        criado_por=criado_por
+        criado_por=criado_por,
+        is_coleta=is_coleta,
     )
 
     for pid in pessoas_ids:

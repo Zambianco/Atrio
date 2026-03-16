@@ -146,12 +146,36 @@
           <div>{{ visita.data_entrada|date:"d/m/Y H:i" }}</div>
         </div>
 
-
         <div class="col-md-4">
           <small class="text-muted">Motivo</small>
           <div>{{ visita.motivo|default:"-" }}</div>
         </div>
       </div>
+
+      {% if not visita.data_saida %}
+        <hr class="my-3">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="form-check form-switch mb-0">
+            <input class="form-check-input" type="checkbox" id="isColetaGerenciar"
+              {% if visita.is_coleta %}checked{% endif %}
+              {% if not tem_pessoa_e_veiculo and not visita.is_coleta %}disabled{% endif %}>
+            <label class="form-check-label fw-semibold" for="isColetaGerenciar">
+              <i class="bi bi-box-arrow-in-down me-1"></i>Coleta de equipamento
+            </label>
+          </div>
+          {% if not tem_pessoa_e_veiculo and not visita.is_coleta %}
+            <small class="text-muted">Vincule ao menos uma pessoa e um veículo para habilitar.</small>
+          {% endif %}
+          {% if visita.is_coleta %}
+            <span class="badge bg-warning text-dark"><i class="bi bi-box-arrow-in-down me-1"></i>Coleta</span>
+          {% endif %}
+        </div>
+      {% else %}
+        {% if visita.is_coleta %}
+          <hr class="my-3">
+          <span class="badge bg-warning text-dark"><i class="bi bi-box-arrow-in-down me-1"></i>Coleta de equipamento</span>
+        {% endif %}
+      {% endif %}
     </div>
   </div>
 
@@ -327,6 +351,38 @@
       // fallback para lista de visitas
       const fallback = btnVoltar.dataset.defaultUrl || '{% url "ui:visitas" %}';
       window.location.href = fallback;
+    });
+  })();
+</script>
+
+<script>
+  (function() {
+    const chk = document.getElementById('isColetaGerenciar');
+    if (!chk) return;
+
+    chk.addEventListener('change', async function() {
+      const is_coleta = chk.checked;
+      chk.disabled = true;
+      try {
+        const csrf = (typeof getCSRFToken === 'function') ? getCSRFToken() : '';
+        const resp = await fetch(`/api/visitas/grupos/{{ visita.id }}/marcar-coleta/`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+          body: JSON.stringify({ is_coleta })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          chk.checked = !is_coleta;
+          if (window.showAlert) await window.showAlert(data.erro || 'Erro ao atualizar coleta.', 'Erro');
+          else alert(data.erro || 'Erro ao atualizar coleta.');
+          return;
+        }
+        location.reload();
+      } catch (e) {
+        chk.checked = !is_coleta;
+        chk.disabled = false;
+        console.error(e);
+      }
     });
   })();
 </script>

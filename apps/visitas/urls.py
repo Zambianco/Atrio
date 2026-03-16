@@ -1,7 +1,13 @@
 from rest_framework.routers import DefaultRouter
 from .views import GrupoVisitaViewSet, VisitaPessoaViewSet, VisitaVeiculoViewSet
 from django.urls import path
-from .views import PresentesAPIView, GrupoResumoAPIView, RegistrarVisitaAPIView, VeiculoSugestoesAPIView
+from .views import (
+    PresentesAPIView,
+    GrupoResumoAPIView,
+    RegistrarVisitaAPIView,
+    VeiculoSugestoesAPIView,
+    MarcarColetaAPIView,
+)
 
 router = DefaultRouter()
 router.register(r'grupos', GrupoVisitaViewSet)
@@ -12,5 +18,6 @@ urlpatterns = router.urls + [
     path("presentes/", PresentesAPIView.as_view()),
     path("veiculos/<int:veiculo_id>/sugestoes/", VeiculoSugestoesAPIView.as_view()),
     path("grupos/<int:grupo_id>/resumo/", GrupoResumoAPIView.as_view()),
+    path("grupos/<int:grupo_id>/marcar-coleta/", MarcarColetaAPIView.as_view()),
     path("registrar/", RegistrarVisitaAPIView.as_view()),
 ]

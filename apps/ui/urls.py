@@ -22,5 +22,6 @@ urlpatterns = [
     ),
     path("visitas/", views.visitas, name="visitas"),
     path('visitas/<int:id>/', views.gerenciar_visita, name='gerenciar_visita'),
+    path("coletas/", views.coletas, name="coletas"),
      
 ]
