@@ -7,6 +7,12 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.5.4 - 2026-03-16
+
+### Corrigido
+
+- Erros do backup agora são capturados sem derrubar o container, com registro da mensagem do 7z no log
+
 ## 1.5.3 - 2026-03-16
 
 ### Corrigido
