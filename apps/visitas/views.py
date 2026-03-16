@@ -77,7 +77,7 @@ class VisitaVeiculoViewSet(viewsets.ModelViewSet):
 
 
 class VeiculoSugestoesAPIView(APIView):
-    permission_classes = [IsAuthenticated, IsPorteiro]
+    permission_classes = [IsAuthenticated, IsUsuario | IsAdmin | IsPorteiro]
 
     def get(self, request, veiculo_id):
         veiculo = get_object_or_404(Veiculo, id=veiculo_id)

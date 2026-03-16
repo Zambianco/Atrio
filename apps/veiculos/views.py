@@ -53,10 +53,11 @@ class VeiculoViewSet(ModelViewSet):
         if len(query) < 2:
             return Response({'veiculos': []})
 
-        # Busca por placa ou modelo
+        # Busca por placa, modelo ou empresa
         veiculos = self.get_queryset().filter(
             Q(placa__icontains=query) |
-            Q(modelo__icontains=query)
+            Q(modelo__icontains=query) |
+            Q(empresa__icontains=query)
         )[:10]
 
         serializer = self.get_serializer(veiculos, many=True)
