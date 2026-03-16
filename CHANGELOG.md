@@ -7,6 +7,16 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.5.0 - 2026-03-16
+
+### Adicionado
+
+- Botão para acionamento de backup manual
+
+### Corrigido
+
+- Horário no nome do arquivo de backup corrigido para horário local
+
 ## 1.4.0 - 2026-03-16
 
 ### Adicionado
