@@ -67,10 +67,12 @@ services:
                 src_conn.close()
                 if password:
                     dst = os.path.join(dst_dir, f'db-{ts}.7z')
-                    subprocess.run(
+                    result = subprocess.run(
                         ['7z', 'a', f'-p{password}', '-mhe=1', '-mx=1', dst, tmp_path],
-                        check=True, capture_output=True
+                        capture_output=True, text=True, encoding='utf-8'
                     )
+                    if result.returncode != 0:
+                        raise RuntimeError(f'7z falhou (rc={result.returncode}): {result.stderr.strip() or result.stdout.strip()}')
                 else:
                     import shutil
                     dst = os.path.join(dst_dir, f'db-{ts}.sqlite3')
@@ -93,7 +95,10 @@ services:
                     except OSError:
                         pass
         while True:
-            run_backup()
+            try:
+                run_backup()
+            except Exception as e:
+                print(f'[backup] erro: {e}', flush=True)
             elapsed = 0
             while elapsed < interval:
                 time.sleep(5)
@@ -103,7 +108,10 @@ services:
                         os.remove(trigger)
                     except OSError:
                         pass
-                    run_backup()
+                    try:
+                        run_backup()
+                    except Exception as e:
+                        print(f'[backup] erro: {e}', flush=True)
                     elapsed = 0
 
 volumes:
