@@ -229,6 +229,9 @@
         <div class="card-footer bg-white border-top">
           <div class="row align-items-center">
             <div class="col-md-6 mb-2 mb-md-0">
+              <button id="btnDesativarVeiculo" type="button" class="btn btn-outline-danger btn-sm me-3 d-none">
+                <i class="bi bi-truck-flatbed me-1"></i>Desativar cadastro
+              </button>
               <span class="text-muted">
                 <span class="text-danger">*</span> Campos obrigatórios
               </span>
@@ -249,6 +252,26 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar desativacao -->
+<div class="modal fade" id="modalDesativarVeiculo" tabindex="-1" aria-labelledby="modalDesativarVeiculoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDesativarVeiculoLabel"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Desativar cadastro</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza de que deseja desativar o cadastro do veículo <strong id="placaVeiculoDesativacao"></strong>?
+        <p class="text-muted small mt-2 mb-0">O veículo deixará de aparecer nas buscas e não poderá ser adicionado a novas visitas. O histórico será preservado.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarDesativarVeiculo"><i class="bi bi-truck-flatbed me-1"></i>Desativar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -288,7 +311,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/novo_veiculo.js' %}?v=20260316"></script>
+<script src="{% static 'js/novo_veiculo.js' %}?v=20260810"></script>
 
 <style>
 .accordion-button:not(.collapsed) {

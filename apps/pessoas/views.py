@@ -16,6 +16,9 @@ class PessoaViewSet(viewsets.ModelViewSet):
     queryset = Pessoa.objects.all()
     serializer_class = PessoaSerializer
 
+    def get_queryset(self):
+        return super().get_queryset().filter(ativo=True)
+
     @action(detail=False, methods=["get"], url_path="empresas")
     def empresas(self, request):
         empresas_qs = (

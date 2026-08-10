@@ -14,6 +14,7 @@ class Pessoa(models.Model):
     empresa = models.CharField(max_length=200, blank=True, null=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, blank=True, null=True)
     observacao = models.TextField(blank=True, null=True)
+    ativo = models.BooleanField(default=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

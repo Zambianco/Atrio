@@ -19,6 +19,8 @@ const csrftoken = getCookie("csrftoken");
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnSalvarVeiculo");
   const btnLimpar = document.getElementById("btnLimparVeiculo");
+  const btnDesativar = document.getElementById("btnDesativarVeiculo");
+  const btnConfirmarDesativar = document.getElementById("btnConfirmarDesativarVeiculo");
   const placa = document.getElementById("placaVeiculo");
   const empresa = document.getElementById("empresaVeiculo");
   const listaEmpresas = document.getElementById("empresasVeiculoList");
@@ -53,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let veiculoEmEdicao = null;
+  const modalDesativar = new bootstrap.Modal(document.getElementById("modalDesativarVeiculo"));
 
   carregarEmpresasVeiculo();
 
@@ -167,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       veiculoEditando.classList.remove("d-none");
       btn.textContent = "Salvar alteracoes";
+      btnDesativar.classList.remove("d-none");
     } else {
       const mensagem = veiculoEditando.querySelector(".mensagem-editando");
       if (mensagem) {
@@ -176,6 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       veiculoEditando.classList.add("d-none");
       btn.textContent = "Salvar";
+      btnDesativar.classList.add("d-none");
     }
   };
 
@@ -193,6 +198,39 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   btnLimpar?.addEventListener("click", () => limparCampos());
+
+  btnDesativar.addEventListener("click", () => {
+    if (!veiculoEmEdicao) return;
+    document.getElementById("placaVeiculoDesativacao").textContent = placa.value.trim() || "selecionado";
+    modalDesativar.show();
+  });
+
+  btnConfirmarDesativar.addEventListener("click", async () => {
+    if (!veiculoEmEdicao) return;
+    btnConfirmarDesativar.disabled = true;
+    try {
+      const resp = await fetch(`/api/veiculos/veiculos/${veiculoEmEdicao}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+        body: JSON.stringify({ ativo: false }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        await showMessage(data.detail || data.erro || "Não foi possível desativar o veículo.");
+        return;
+      }
+      modalDesativar.hide();
+      limparCampos();
+      buscaVeiculo.value = "";
+      listaVeiculo.innerHTML = "";
+      await showMessage("Cadastro do veículo desativado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      await showMessage("Erro de comunicação com o servidor.");
+    } finally {
+      btnConfirmarDesativar.disabled = false;
+    }
+  });
 
   const mostrarModalVeiculoExistente = (veiculo) => {
     document.getElementById("modalVeiculoPlaca").textContent = veiculo.placa || "-";

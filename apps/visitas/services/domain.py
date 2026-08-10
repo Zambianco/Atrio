@@ -16,6 +16,8 @@ def _validar_visita_aberta(grupo):
 
 
 def _validar_pessoa_nao_em_visita(pessoa_id):
+    if not Pessoa.objects.filter(id=pessoa_id, ativo=True).exists():
+        raise ValidationError("Pessoa inexistente ou desativada")
     if VisitaPessoa.objects.filter(
         pessoa_id=pessoa_id, data_saida__isnull=True
     ).exists():
@@ -23,6 +25,8 @@ def _validar_pessoa_nao_em_visita(pessoa_id):
 
 
 def _validar_veiculo_nao_em_visita(veiculo_id):
+    if not Veiculo.objects.filter(id=veiculo_id, ativo=True).exists():
+        raise ValidationError("Veículo inexistente ou desativado")
     if VisitaVeiculo.objects.filter(
         veiculo_id=veiculo_id, data_saida__isnull=True
     ).exists():

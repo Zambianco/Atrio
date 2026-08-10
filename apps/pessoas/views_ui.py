@@ -21,7 +21,7 @@ def buscar_pessoas(request):
         return JsonResponse({'pessoas': []})
     
     # Busca por nome ou empresa
-    pessoas = Pessoa.objects.filter(
+    pessoas = Pessoa.objects.filter(ativo=True).filter(
         Q(nome__icontains=query) | 
         Q(empresa__icontains=query)
     )[:10]  # Limita a 10 resultados

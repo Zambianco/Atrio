@@ -203,6 +203,9 @@
         <div class="card-footer bg-white border-top">
           <div class="row align-items-center">
             <div class="col-md-6 mb-2 mb-md-0">
+              <button id="btnDesativarPessoa" type="button" class="btn btn-outline-danger btn-sm me-3 d-none">
+                <i class="bi bi-person-x me-1"></i>Desativar cadastro
+              </button>
               <span class="text-muted">
                 <span class="text-danger">*</span> Campos obrigatórios
               </span>
@@ -223,6 +226,26 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmar desativacao -->
+<div class="modal fade" id="modalDesativarPessoa" tabindex="-1" aria-labelledby="modalDesativarPessoaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalDesativarPessoaLabel"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Desativar cadastro</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza de que deseja desativar o cadastro de <strong id="nomePessoaDesativacao"></strong>?
+        <p class="text-muted small mt-2 mb-0">A pessoa deixará de aparecer nas buscas e não poderá ser adicionada a novas visitas. O histórico será preservado.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmarDesativarPessoa"><i class="bi bi-person-x me-1"></i>Desativar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -260,7 +283,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/nova_pessoa.js' %}?v=20260316"></script>
+<script src="{% static 'js/nova_pessoa.js' %}?v=20260810"></script>
 
 <!-- Template para documentos -->
 <template id="documentoTemplate">

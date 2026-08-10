@@ -12,6 +12,9 @@ class VeiculoViewSet(ModelViewSet):
     queryset = Veiculo.objects.all()
     serializer_class = VeiculoSerializer
 
+    def get_queryset(self):
+        return super().get_queryset().filter(ativo=True)
+
     @action(detail=False, methods=["get"], url_path="empresas")
     def empresas(self, request):
         empresas_qs = (

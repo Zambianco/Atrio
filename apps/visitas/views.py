@@ -104,7 +104,7 @@ class VeiculoSugestoesAPIView(APIView):
 
         pessoas_empresa = []
         if empresa:
-            pessoas_qs = Pessoa.objects.filter(empresa__iexact=empresa).order_by("nome")[:10]
+            pessoas_qs = Pessoa.objects.filter(ativo=True, empresa__iexact=empresa).order_by("nome")[:10]
             pessoas_empresa = [
                 {
                     "id": p.id,

@@ -20,6 +20,8 @@ const csrftoken = getCookie("csrftoken");
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("btnSalvarPessoa");
   const btnLimpar = document.getElementById("btnLimparPessoa");
+  const btnDesativar = document.getElementById("btnDesativarPessoa");
+  const btnConfirmarDesativar = document.getElementById("btnConfirmarDesativarPessoa");
   const btnAdicionarDocumento = document.getElementById("btnAdicionarDocumento");
   const documentosContainer = document.getElementById("documentosContainer");
   const template = document.getElementById("documentoTemplate");
@@ -57,6 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let tiposDocumento = [];
   let pessoaEmEdicao = null;
   let documentosRemovidos = [];
+  const modalDesativar = new bootstrap.Modal(document.getElementById("modalDesativarPessoa"));
 
   carregarEmpresasPessoa();
   const CPF_DIGITS_LEN = 11;
@@ -374,10 +377,12 @@ document.addEventListener("DOMContentLoaded", () => {
       pessoaEditando.textContent = `Editando: ${pessoa.nome || "Pessoa"} (ID ${pessoaEmEdicao})`;
       pessoaEditando.classList.remove("d-none");
       btn.textContent = "Salvar alteracoes";
+      btnDesativar.classList.remove("d-none");
     } else {
       pessoaEditando.textContent = "";
       pessoaEditando.classList.add("d-none");
       btn.textContent = "Salvar";
+      btnDesativar.classList.add("d-none");
     }
   };
 
@@ -694,6 +699,38 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   btnLimpar?.addEventListener("click", () => limparCampos());
+  btnDesativar.addEventListener("click", () => {
+    if (!pessoaEmEdicao) return;
+    document.getElementById("nomePessoaDesativacao").textContent = nome.value.trim() || "esta pessoa";
+    modalDesativar.show();
+  });
+
+  btnConfirmarDesativar.addEventListener("click", async () => {
+    if (!pessoaEmEdicao) return;
+    btnConfirmarDesativar.disabled = true;
+    try {
+      const resp = await fetch(`/api/pessoas/pessoas/${pessoaEmEdicao}/`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+        body: JSON.stringify({ ativo: false }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        await showMessage(data.detail || data.erro || "Não foi possível desativar a pessoa.");
+        return;
+      }
+      modalDesativar.hide();
+      limparCampos();
+      buscaPessoa.value = "";
+      listaPessoa.innerHTML = "";
+      await showMessage("Cadastro da pessoa desativado com sucesso!");
+    } catch (err) {
+      console.error(err);
+      await showMessage("Erro de comunicação com o servidor.");
+    } finally {
+      btnConfirmarDesativar.disabled = false;
+    }
+  });
   btnAdicionarDocumento?.addEventListener("click", () => adicionarDocumento());
 
   buscaPessoa.addEventListener("input", async (event) => {
