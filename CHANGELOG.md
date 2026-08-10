@@ -7,6 +7,13 @@ e este projeto segue o Versionamento Semantico.
 
 ## Nao Lancado
 
+## 1.6.1 - 2026-08-10
+
+### Corrigido
+
+- Container web agora detecta o GID da pasta de backups montada e concede acesso ao usuario da aplicacao, evitando alertas incorretos de pasta inacessivel em compartilhamentos com permissao por grupo
+- Configuracao persistente de `BACKUP_HOST_DIR` documentada no `.env` da raiz, sem depender de variaveis exportadas apenas na sessao do terminal
+
 ## 1.6.0 - 2026-03-16
 
 ### Adicionado
