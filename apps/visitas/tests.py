@@ -117,3 +117,24 @@ class DominioVisitasTest(TestCase):
                 tipo_documento=tipo,
                 numero="123"
             )
+
+
+class ConsultaVisitasAPITest(TestCase):
+    def test_retorna_visitas_com_relacionamentos_em_tres_consultas(self):
+        pessoa = Pessoa.objects.create(nome="Visitante")
+        veiculo = Veiculo.objects.create(placa="ABC1234")
+        grupo = registrar_visita(
+            motivo="Entrega",
+            autorizado_por="Portaria",
+            observacao="",
+            pessoas_ids=[pessoa.id],
+            veiculos_ids=[veiculo.id],
+        )
+
+        with self.assertNumQueries(3):
+            response = self.client.get("/api/visitas/grupos/consulta/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data[0]["id"], grupo.id)
+        self.assertEqual(response.data[0]["pessoas"][0]["nome"], "Visitante")
+        self.assertEqual(response.data[0]["veiculos"][0]["placa"], "ABC1234")

@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from django.db.models import Prefetch
 
 from rest_framework.permissions import IsAuthenticated
 from apps.core.permissions import IsPorteiro, IsUsuario, IsAdmin, IsExpedicao
@@ -33,6 +34,46 @@ from .services.domain import (
 class GrupoVisitaViewSet(viewsets.ModelViewSet):
     queryset = GrupoVisita.objects.all().order_by("-data_entrada")
     serializer_class = GrupoVisitaSerializer
+
+    @action(detail=False, methods=["get"])
+    def consulta(self, request):
+        grupos = self.get_queryset().select_related("criado_por").prefetch_related(
+            Prefetch("pessoas", queryset=VisitaPessoa.objects.select_related("pessoa")),
+            Prefetch("veiculos", queryset=VisitaVeiculo.objects.select_related("veiculo")),
+        )
+
+        resultado = []
+        for grupo in grupos:
+            resultado.append({
+                "id": grupo.id,
+                "motivo": grupo.motivo,
+                "autorizado_por": grupo.autorizado_por,
+                "usuario": grupo.criado_por.username if grupo.criado_por else "",
+                "observacao": grupo.observacao,
+                "data_entrada": grupo.data_entrada,
+                "data_saida": grupo.data_saida,
+                "status": "encerrada" if grupo.data_saida else "aberta",
+                "pessoas": [
+                    {
+                        "id": visita.id,
+                        "nome": visita.pessoa.nome,
+                        "data_entrada": visita.data_entrada,
+                        "data_saida": visita.data_saida,
+                    }
+                    for visita in grupo.pessoas.all()
+                ],
+                "veiculos": [
+                    {
+                        "id": visita.id,
+                        "placa": visita.veiculo.placa,
+                        "data_entrada": visita.data_entrada,
+                        "data_saida": visita.data_saida,
+                    }
+                    for visita in grupo.veiculos.all()
+                ],
+            })
+
+        return Response(resultado)
 
     @action(detail=True, methods=["post"])
     def encerrar(self, request, pk=None):
