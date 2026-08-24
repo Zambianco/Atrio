@@ -223,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
       limparCampos();
       buscaVeiculo.value = "";
       listaVeiculo.innerHTML = "";
-      await showMessage("Cadastro do veículo desativado com sucesso!");
+      await showMessage("Cadastro do veículo desativado com sucesso! A reativação deverá ser feita por um administrador.");
     } catch (err) {
       console.error(err);
       await showMessage("Erro de comunicação com o servidor.");

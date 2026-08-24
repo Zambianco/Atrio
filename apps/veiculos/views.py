@@ -1,6 +1,7 @@
 # apps/veiculos/views.py
 
 import re
+from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,7 +14,25 @@ class VeiculoViewSet(ModelViewSet):
     serializer_class = VeiculoSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(ativo=True)
+        queryset = super().get_queryset()
+        if (
+            self.request.user.is_staff
+            and self.request.query_params.get("incluir_desativados") == "1"
+        ):
+            return queryset
+        return queryset.filter(ativo=True)
+
+    @action(detail=True, methods=["post"])
+    def reativar(self, request, pk=None):
+        if not request.user.is_staff:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        veiculo = Veiculo.objects.filter(pk=pk).first()
+        if not veiculo:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        veiculo.ativo = True
+        veiculo.save(update_fields=["ativo"])
+        return Response(self.get_serializer(veiculo).data)
 
     @action(detail=False, methods=["get"], url_path="empresas")
     def empresas(self, request):

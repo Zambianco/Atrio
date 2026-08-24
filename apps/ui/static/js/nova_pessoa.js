@@ -723,7 +723,7 @@ document.addEventListener("DOMContentLoaded", () => {
       limparCampos();
       buscaPessoa.value = "";
       listaPessoa.innerHTML = "";
-      await showMessage("Cadastro da pessoa desativado com sucesso!");
+      await showMessage("Cadastro da pessoa desativado com sucesso! A reativação deverá ser feita por um administrador.");
     } catch (err) {
       console.error(err);
       await showMessage("Erro de comunicação com o servidor.");

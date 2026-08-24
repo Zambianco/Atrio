@@ -34,7 +34,7 @@ async function carregarPessoas() {
   document.getElementById("emptyPessoas").classList.add("d-none");
 
   try {
-    const resp = await fetch("/api/pessoas/pessoas/", { credentials: "same-origin" });
+    const resp = await fetch("/api/pessoas/pessoas/?incluir_desativados=1", { credentials: "same-origin" });
     if (!resp.ok) throw new Error("Erro ao carregar pessoas");
     const data = await resp.json();
     todasPessoas = Array.isArray(data) ? data : (data.results || []);
@@ -102,9 +102,10 @@ function renderPessoas() {
     const tipoCor = TIPO_PESSOA_BADGE[p.tipo] || "secondary";
     const empresa = p.empresa || "—";
     const dataCadastro = formatarData(p.criado_em);
+    const desativado = p.ativo === false;
 
     return `
-      <div class="cadastro-card card">
+      <div class="cadastro-card card${desativado ? " desativado" : ""}">
         <div class="card-body py-2 px-3">
           <div class="row align-items-center g-2">
             <div class="col-md-4">
@@ -115,6 +116,7 @@ function renderPessoas() {
                 <div>
                   <div class="fw-semibold text-truncate" style="max-width:200px;" title="${escapeHtml(p.nome)}">${escapeHtml(p.nome)}</div>
                   <span class="badge bg-${tipoCor} tipo-badge">${tipoLabel}</span>
+                  ${desativado ? '<span class="badge bg-danger tipo-badge">Desativado</span>' : ""}
                 </div>
               </div>
             </div>
@@ -127,9 +129,15 @@ function renderPessoas() {
               <div class="info-value">${dataCadastro}</div>
             </div>
             <div class="col-md-3 text-end">
-              <a href="/cadastro-pessoa/?id=${p.id}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-pencil me-1"></i>Editar
-              </a>
+              ${desativado ? `
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="reativarCadastro('pessoas', ${p.id})">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Reativar
+                </button>
+              ` : `
+                <a href="/cadastro-pessoa/?id=${p.id}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil me-1"></i>Editar
+                </a>
+              `}
             </div>
           </div>
         </div>
@@ -153,7 +161,7 @@ async function carregarVeiculos() {
   document.getElementById("emptyVeiculos").classList.add("d-none");
 
   try {
-    const resp = await fetch("/api/veiculos/veiculos/", { credentials: "same-origin" });
+    const resp = await fetch("/api/veiculos/veiculos/?incluir_desativados=1", { credentials: "same-origin" });
     if (!resp.ok) throw new Error("Erro ao carregar veículos");
     const data = await resp.json();
     todosVeiculos = Array.isArray(data) ? data : (data.results || []);
@@ -224,9 +232,10 @@ function renderVeiculos() {
     const empresa = v.empresa || "—";
     const tipo = v.tipo || "—";
     const dataCadastro = formatarData(v.criado_em);
+    const desativado = v.ativo === false;
 
     return `
-      <div class="cadastro-card card">
+      <div class="cadastro-card card${desativado ? " desativado" : ""}">
         <div class="card-body py-2 px-3">
           <div class="row align-items-center g-2">
             <div class="col-md-3">
@@ -237,6 +246,7 @@ function renderVeiculos() {
                 <div>
                   <div class="fw-bold fs-6">${escapeHtml(v.placa)}</div>
                   <small class="text-muted">${escapeHtml(tipo)}</small>
+                  ${desativado ? '<span class="badge bg-danger ms-1">Desativado</span>' : ""}
                 </div>
               </div>
             </div>
@@ -253,9 +263,15 @@ function renderVeiculos() {
               <div class="info-value">${dataCadastro}</div>
             </div>
             <div class="col-md-2 text-end">
-              <a href="/cadastro-veiculo/?id=${v.id}" class="btn btn-sm btn-outline-warning">
-                <i class="bi bi-pencil me-1"></i>Editar
-              </a>
+              ${desativado ? `
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="reativarCadastro('veiculos', ${v.id})">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Reativar
+                </button>
+              ` : `
+                <a href="/cadastro-veiculo/?id=${v.id}" class="btn btn-sm btn-outline-warning">
+                  <i class="bi bi-pencil me-1"></i>Editar
+                </a>
+              `}
             </div>
           </div>
         </div>
@@ -287,6 +303,18 @@ function recarregarAtual() {
     carregarVeiculos();
   } else {
     carregarPessoas();
+  }
+}
+
+async function reativarCadastro(recurso, id) {
+  try {
+    await window.apiRequest(`/api/${recurso}/${recurso}/${id}/reativar/`, {
+      method: "POST",
+    });
+    await window.showAlert("Cadastro reativado com sucesso!", "Sucesso");
+    recurso === "pessoas" ? carregarPessoas() : carregarVeiculos();
+  } catch (err) {
+    await window.showAlert("Não foi possível reativar o cadastro.", "Erro");
   }
 }
 
