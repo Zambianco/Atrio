@@ -96,6 +96,14 @@
           </ul>
         </li>
         {% endif %}
+        {% if is_admin %}
+        <li class="nav-item">
+          <a class="nav-link {% if request.resolver_match.url_name == 'auditoria' %}active{% endif %}"
+             href="{% url 'ui:auditoria' %}">
+            <i class="bi bi-journal-text me-1"></i>Auditoria
+          </a>
+        </li>
+        {% endif %}
         {% if is_expedicao or is_admin or is_porteiro or is_usuario %}
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'coletas' %}active{% endif %}"

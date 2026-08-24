@@ -21,6 +21,7 @@ urlpatterns = [
         RedirectView.as_view(pattern_name="ui:cadastro_veiculo", permanent=False),
     ),
     path("consulta-cadastros/", views.consulta_cadastros, name="consulta_cadastros"),
+    path("auditoria/", views.auditoria, name="auditoria"),
     path("visitas/", views.visitas, name="visitas"),
     path('visitas/<int:id>/', views.gerenciar_visita, name='gerenciar_visita'),
     path("coletas/", views.coletas, name="coletas"),
